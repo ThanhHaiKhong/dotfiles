@@ -33,8 +33,8 @@ plugins=(
 # Nạp oh-my-zsh.
 source $ZSH/oh-my-zsh.sh
 
-# Simple prompt configuration
-export PS1="%F{cyan}%n@%m %F{green}%1~ %# %f"
+# Simple prompt configuration (disabled for Starship)
+# export PS1="%F{cyan}%n@%m %F{green}%1~ %# %f"
 
 # Conditional loading of zsh plugins (only if installed)
 [[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] &&

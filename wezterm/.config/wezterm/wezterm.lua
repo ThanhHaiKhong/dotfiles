@@ -15,8 +15,8 @@ config.allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace"
 -- Window decorations and padding
 config.window_decorations = "RESIZE"
 config.window_padding = {
-  left = 30,
-  right = 30,
+  left = 20,
+  right = 20,
   top = 20,
   bottom = 20,
 }

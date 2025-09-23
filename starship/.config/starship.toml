@@ -1,0 +1,464 @@
+# ============================================================================
+# ✨ Enhanced Starship Configuration for WezTerm
+# ============================================================================
+# https://starship.rs/config/
+
+# Get editor completions based on the config schema
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Use custom format for better control
+format = """
+$os\
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$git_metrics\
+$git_state\
+$fill\
+$nodejs\
+$bun\
+$python\
+$rust\
+$golang\
+$dart\
+$java\
+$swift\
+$kotlin\
+$php\
+$ruby\
+$docker_context\
+$kubernetes\
+$aws\
+$gcloud\
+$azure\
+$cmd_duration\
+$jobs\
+$battery\
+$line_break\
+$character"""
+
+# Add a blank line between shell prompts
+add_newline = true
+
+# Performance optimizations
+scan_timeout = 50
+command_timeout = 1000
+
+# Color palette
+palette = "catppuccin_mocha"
+
+# ============================================================================
+# COLOR PALETTES
+# ============================================================================
+[palettes.catppuccin_mocha]
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext1 = "#bac2de"
+subtext0 = "#a6adc8"
+overlay2 = "#9399b2"
+overlay1 = "#7f849c"
+overlay0 = "#6c7086"
+surface2 = "#585b70"
+surface1 = "#45475a"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"
+
+# ============================================================================
+# RIGHT PROMPT CONFIGURATION
+# ============================================================================
+right_format = """$time$battery$memory_usage"""
+
+# ============================================================================
+# CONTINUATION PROMPT
+# ============================================================================
+continuation_prompt = '▶▶ '
+
+# ============================================================================
+# PROMPT SYMBOL CONFIGURATION
+# ============================================================================
+[character]
+success_symbol = '[>](bold green)'
+error_symbol = '[>](bold red)'
+vicmd_symbol = '[<](bold yellow)'  # For vi mode
+
+# ============================================================================
+# DIRECTORY DISPLAY
+# ============================================================================
+[directory]
+style = "bold blue"
+read_only = " 󰌾"
+read_only_style = "bold red"
+truncation_length = 5
+truncate_to_repo = false
+home_symbol = "󰋜 ~"
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+# [directory.substitutions]
+# "Documents" = "󰈙 "
+# "Downloads" = " "
+# "Music" = "󱍞 "
+# "Pictures" = " "
+# "Videos" = " "
+# "Projects" = "󰴋 "
+# "dotfiles" = " "
+
+# ============================================================================
+# GIT CONFIGURATION
+# ============================================================================
+[git_branch]
+symbol = " "
+style = "bold green"
+format = "on [$symbol$branch(:$remote_branch)]($style) "
+truncation_length = 20
+truncation_symbol = "…"
+
+[git_status]
+style = "bold red"
+ahead = "⇡${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+behind = "⇣${count} "
+up_to_date = "󰘽 "
+untracked = "?${count} "
+staged = "+${count} "
+modified = "!${count} "
+renamed = "»${count} "
+deleted = "✗${count} "
+conflicted = "=${count} "
+stashed = "\\$${count} "
+format = "([$all_status$ahead_behind]($style))"
+
+# Show detailed git metrics
+[git_metrics]
+added_style = "bold green"
+deleted_style = "bold red"
+only_nonzero_diffs = true
+format = '([+$added]($added_style) )([-$deleted]($deleted_style) )'
+disabled = false
+
+# Git state (rebase, merge, etc.)
+[git_state]
+rebase = "REBASING"
+merge = "MERGING"
+revert = "REVERTING"
+cherry_pick = "CHERRY-PICKING"
+bisect = "BISECTING"
+am = "AM"
+am_or_rebase = "AM/REBASE"
+style = "bold yellow"
+format = '\\([$state( $progress_current/$progress_total)]($style)\\) '
+
+# ============================================================================
+# SYSTEM INFORMATION
+# ============================================================================
+[os]
+disabled = false
+style = "bold white"
+format = "[$symbol]($style)"
+
+[os.symbols]
+Macos = " "
+Ubuntu = " "
+Windows = "󰖳 "
+
+[username]
+style_user = "bold yellow"
+style_root = "bold red"
+format = "[$user]($style) "
+disabled = false
+show_always = false
+
+[hostname]
+ssh_only = true
+style = "bold green"
+format = "[@$hostname]($style) "
+disabled = false
+
+# ============================================================================
+# PERFORMANCE METRICS
+# ============================================================================
+[cmd_duration]
+min_time = 1000
+show_milliseconds = true
+format = "󱎫 [$duration](bold yellow) "
+show_notifications = false
+
+[jobs]
+symbol = " "
+style = "bold red"
+number_threshold = 1
+symbol_threshold = 1
+format = "[$symbol$number]($style) "
+
+# Right-side fill for alignment
+[fill]
+symbol = " "
+style = "bold black"
+
+# ============================================================================
+# DEVELOPMENT LANGUAGES
+# ============================================================================
+[nodejs]
+symbol = " "
+style = "bold green"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["js", "mjs", "cjs", "ts", "tsx"]
+detect_files = ["package.json", ".nvmrc"]
+
+[python]
+symbol = " "
+style = "bold yellow"
+format = '[${symbol}${pyenv_prefix}(${version} )\\($virtualenv\\) ]($style)'
+detect_extensions = ["py"]
+detect_files = ["requirements.txt", "pyproject.toml", "Pipfile"]
+
+[rust]
+symbol = " "
+style = "bold red"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["rs"]
+detect_files = ["Cargo.toml"]
+
+[golang]
+symbol = " "
+style = "bold cyan"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["go"]
+detect_files = ["go.mod", "go.sum"]
+
+[dart]
+symbol = " "
+style = "bold blue"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["dart"]
+detect_files = ["pubspec.yaml", "pubspec.lock"]
+
+[java]
+symbol = " "
+style = "bold orange"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["java", "class", "jar"]
+detect_files = ["pom.xml", "build.gradle", "build.gradle.kts"]
+
+# Additional languages
+[swift]
+symbol = " "
+style = "bold orange"
+format = "[$symbol($version )]($style)"
+
+[kotlin]
+symbol = " "
+style = "bold purple"
+format = "[$symbol($version )]($style)"
+
+[php]
+symbol = " "
+style = "bold purple"
+format = "[$symbol($version )]($style)"
+
+[ruby]
+symbol = " "
+style = "bold red"
+format = "[$symbol($version )]($style)"
+
+# ============================================================================
+# BUN RUNTIME
+# ============================================================================
+[bun]
+symbol = "🥟 "
+style = "bold yellow"
+format = "[$symbol($version )]($style)"
+detect_files = ["bun.lock", "bun.lockb", "bunfig.toml"]
+
+# ============================================================================
+# CLOUD & CONTAINERS
+# ============================================================================
+[docker_context]
+symbol = " "
+style = "bold blue"
+format = "[$symbol$context ]($style)"
+only_with_files = true
+detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile"]
+
+[kubernetes]
+symbol = "☸ "
+style = "bold blue"
+format = '[$symbol$context( \\($namespace\\))]($style) '
+disabled = true  # Enable when needed
+detect_files = ["k8s", "kustomization.yaml"]
+
+[aws]
+symbol = "  "
+style = "bold yellow"
+format = "[$symbol($profile )(\\($region\\) )([$duration] )]($style)"
+expiration_symbol = "󰃰"
+
+[gcloud]
+symbol = "󱇶 "
+style = "bold blue"
+format = "[$symbol$account(@$domain)(\\($region\\))]($style) "
+
+[azure]
+symbol = "󰠅 "
+style = "bold blue"
+format = "[$symbol($subscription)]($style) "
+disabled = false
+
+# ============================================================================
+# PACKAGE MANAGERS
+# ============================================================================
+[package]
+symbol = "󰏗 "
+style = "bold magenta"
+format = "[$symbol$version]($style) "
+disabled = true  # Can be noisy
+
+# [npm]  # Not a standard Starship module
+# symbol = " "
+# style = "bold red"
+# format = "[$symbol($version )]($style)"
+# detect_files = ["package.json"]
+
+# ============================================================================
+# BATTERY (for laptops)
+# ============================================================================
+[battery]
+full_symbol = "󰁹 "
+charging_symbol = "󰂄 "
+discharging_symbol = "󰂃 "
+unknown_symbol = "󰁽 "
+empty_symbol = "󰂎 "
+format = "[$symbol$percentage]($style) "
+
+[[battery.display]]
+threshold = 15
+style = "bold red"
+discharging_symbol = "󰂎 "
+
+[[battery.display]]
+threshold = 30
+style = "bold yellow"
+discharging_symbol = "󰁺 "
+
+[[battery.display]]
+threshold = 60
+style = "bold green"
+
+[[battery.display]]
+threshold = 100
+style = "bold green"
+
+# ============================================================================
+# MEMORY USAGE
+# ============================================================================
+[memory_usage]
+symbol = "󰍛"
+style = "bold peach"
+format = "[$symbol${ram}]($style)"
+threshold = 75
+disabled = false
+
+# ============================================================================
+# TIME DISPLAY
+# ============================================================================
+[time]
+disabled = false
+time_format = "%H:%M"
+format = "[$time]($style)"
+style = "bold lavender"
+utc_time_offset = "local"
+
+# ============================================================================
+# STATUS & ERROR HANDLING
+# ============================================================================
+[status]
+style = "bold red"
+symbol = "✖"
+success_symbol = ""
+format = "[$symbol $common_meaning$signal_name$maybe_int]($style) "
+map_symbol = true
+disabled = false
+
+# ============================================================================
+# SHELL INDICATORS
+# ============================================================================
+[shell]
+fish_indicator = " "
+powershell_indicator = "󰨊 "
+unknown_indicator = "mystery shell"
+style = "cyan bold"
+disabled = true
+
+# ============================================================================
+# CONTAINER AND RUNTIME DETECTION
+# ============================================================================
+[container]
+symbol = "⬢ "
+style = "bold red dimmed"
+format = "[$symbol$name]($style) "
+
+[buf]
+symbol = "🐃 "
+style = "bold blue"
+format = "[$symbol($version )]($style)"
+detect_files = ["buf.yaml", "buf.gen.yaml", "buf.work.yaml"]
+
+[terraform]
+symbol = "󱁢 "
+style = "bold purple"
+format = "[$symbol$workspace]($style) "
+
+[nix_shell]
+symbol = " "
+style = "bold blue"
+format = "[$symbol$state( \\($name\\))]($style) "
+
+# ============================================================================
+# WINDOW TITLE CONFIGURATION
+# ============================================================================
+# To enable dynamic window titles, add this to your shell configuration:
+#
+# For Bash/Zsh (~/.bashrc or ~/.zshrc):
+# function set_win_title(){
+#     echo -ne "\033]0; $(basename "$PWD") \007"
+# }
+# starship_precmd_user_func="set_win_title"
+#
+# For Fish (~/.config/fish/config.fish):
+# function starship_preprompt_user_func
+#     echo -ne "\033]0; $(basename $PWD) \007"
+# end
+
+# ============================================================================
+# CUSTOM COMMANDS (Examples)
+# ============================================================================
+# [custom.git_scope]
+# command = "git config --get conventional.scope || echo 'none'"
+# when = "git rev-parse --is-inside-work-tree 2> /dev/null"
+# style = "bold purple"
+# format = "[($output)]($style) "
+# disabled = true
+
+# Show current git user when in a git repo
+[custom.git_user]
+command = "git config --get user.name"
+when = "git rev-parse --is-inside-work-tree 2> /dev/null"
+style = "bold blue"
+format = "[($output)]($style) "
+disabled = true
