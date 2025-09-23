@@ -137,6 +137,9 @@ export PYENV_ROOT="$HOME/.pyenv"
 export ANDROID_HOME="$HOME/Library/Android/sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 
+# Doom Emacs configuration directory
+export DOOMDIR="$HOME/dotfiles/doom/.doom.d"
+
 # Rust/Cargo environment
 . "$HOME/.cargo/env"
 

@@ -324,7 +324,7 @@ config.colors = {
 -- Terminal behavior configuration
 config.scrollback_lines = 10000
 config.enable_scroll_bar = false
-config.term = "wezterm"
+config.term = "xterm-256color"
 config.audible_bell = "SystemBeep"
 config.visual_bell = {}
 config.exit_behavior = "CloseOnCleanExit"
@@ -371,7 +371,7 @@ config.default_workspace = "main"
 config.default_prog = nil  -- Use system default shell
 config.default_cwd = nil   -- Use home directory
 config.set_environment_variables = {
-  TERM = "wezterm",
+  -- TERM is set via config.term instead
 }
 
 -- Launcher menu
