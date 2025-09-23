@@ -1,0 +1,8 @@
+platform settings -w "/var/tmp/_bazel_thanhhaikhong/11afff41673e55d15a243175955f8005/rules_xcodeproj.noindex/build_output_base/execroot/__main__"
+settings set target.source-map ./bazel-out/ "/var/tmp/_bazel_thanhhaikhong/11afff41673e55d15a243175955f8005/rules_xcodeproj.noindex/build_output_base/execroot/__main__/bazel-out"
+settings append target.source-map ./bazel-out/ "/var/tmp/_bazel_thanhhaikhong/11afff41673e55d15a243175955f8005/rules_xcodeproj.noindex/indexbuild_output_base/execroot/__main__/bazel-out"
+settings append target.source-map ./external/ "/var/tmp/_bazel_thanhhaikhong/11afff41673e55d15a243175955f8005/rules_xcodeproj.noindex/build_output_base/external"
+settings append target.source-map ./external/ "/var/tmp/_bazel_thanhhaikhong/11afff41673e55d15a243175955f8005/rules_xcodeproj.noindex/indexbuild_output_base/execroot/__main__/external"
+settings append target.source-map ./external/ "/var/tmp/_bazel_thanhhaikhong/11afff41673e55d15a243175955f8005/rules_xcodeproj.noindex/build_output_base/execroot/__main__/external"
+settings append target.source-map "./" "/Users/thanhhaikhong/Projects/gogo"
+command script import "/Users/thanhhaikhong/Library/Developer/Xcode/DerivedData/App-aqttxuvfbthnvycgvijizbftflzi/Build/Intermediates.noindex/Debug/swift_debug_settings.py"

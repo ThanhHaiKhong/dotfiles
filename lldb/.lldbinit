@@ -1,0 +1,2 @@
+command script import /path/to/lldb_commands/dslldb.pycommand source ~/.lldbinit-rules_xcodeproj
+settings set target.experimental.swift-enable-cxx-interop false

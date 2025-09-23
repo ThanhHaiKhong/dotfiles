@@ -1,0 +1,37 @@
+# Sensitive configuration files
+.claude/
+claude/
+github-copilot/
+wezterm/.config/wezterm/.claude/
+config/
+
+# Google Cloud credentials and config
+gcloud/
+**/gcloud/
+
+# GitHub CLI and related tools
+gh/
+gh-copilot/
+glab-cli/
+**/gh/config.yml
+**/gh/hosts.yml
+**/gh-copilot/config.yml
+**/glab-cli/config.yml
+
+# GitHub Copilot session data and tokens
+**/github-copilot/apps.json
+**/github-copilot/*/conversations/
+**/github-copilot/*/appstate.json
+**/ai/chat-*-sessions/
+
+# Claude configuration files
+**/.claude.json
+**/claude/.claude.json
+**/mcp_config.json
+
+# General patterns for sensitive files
+*.token
+*.key
+*.pem
+credentials.json
+config.yml

@@ -1,0 +1,100 @@
+:kind []
+:kind Either
+:kind Maybe
+:kind fmap
+:q
+:q
+:type add
+add = \x y ->  x + y
+add = \x y = x + y
+[ x | sublist <- lists, x <- sublist ]
+let lists = [[1, 2], [3, 4], [5]]
+boomBangs [7..13]
+boomBangs xs = [if x < 10 then "BOOM!" else "BANG!" | x <- xs, odd x]
+boomBangs xc = [if x < 10 then "BOOM!" else "BANG!" | x <- xs, odd x]
+[x * y | x <- [1..10], y <- [1..10]]
+:type myList
+:type infiniteList
+leng infiniteList
+tail infiniteList
+head infiniteList
+take 5 infiniteList
+infiniteList
+infiniteList = [1..]
+myList
+myList = [1,2,3,4,5]
+:type add
+add 3 4
+add x y = x + y
+:type add
+8 * 8
+ll
+:quit
+:wq
+exit
+q
+8 * 9
+:q
+exit
+exirt
+:q
+q
+:q
+2 + 2
+print "Hello"
+print 'Hello'
+repeat 10 
+repeat 10 "H"
+repeat 10 9
+replicate 5 True
+replicate 5 true
+replicate 5 False
+replicate 5 "Haha"
+:q
+nvim
+perimeter 9 8
+area 8 7
+clear
+:l Geometry
+:l Geometry.hs
+import Geometry
+:q
+area :: Float -> Float -> Float
+module Geometry (area, perimeter) where
+"Haskell"
+['H', 'a', 's', 'k', 'e', 'l', 'l']
+([] : [] : [])
+[] : [] : []
+:t intercalate
+:t intersperse
+intersperse '.' "MONKEY"
+intercalate " " ["Hello", "world", "Haskell"]
+intercalate [1,2] [[3,4,5],[6,7,8]]
+intercalate [1,2] [[3,4,5]]
+intercalate [1,3,0] [[2,4,7],[5,6,8],[7,8,9]]
+intercalate [1,3,0] [[2,4,7],[5,6,8],[7,8,9]]
+intercalate [1,3] [[2,4],[5,6],[7,8]]
+intercalate [1,3,0] [[2,4,7],[5,6,8],[7,8,9]]
+:m Data.List
+intercalate [0,0,0] [[1,2,3],[4,5,6],[7,8,9]]
+intercalate [1,3,0] [[2,4,7],[5,6,8],[7,8,9]]
+intercalate [1,3] [[2,4],[5,6],[7,8]]
+intercalate [1,3] [[2,4], [5,6], [7,8]]
+intercalate [1,3] [[2,4], [5,6]]
+:q
+intercalate [0,0,0] [[1,2,3],[4,5,6],[7,8,9]]
+intercalte 1 [2,4,5]
+intercalte 1,2 [[1], [2]]
+intercalte [1,2] [[1], [2]]
+intercalte [1,2] [1,2,3]
+:t intercalate
+:t intercalte
+intercalte 1 [1,2,3]
+intercalte 1 [[4,5,6], [7,8]]
+intercalate ", " ["Heys", "There", "Guys"]
+intercalate "," ["Heys", "There", "Guys"]
+intercalate " " ["Heys", "There", "Guys"]
+intercalte [1,2,3] [[4,5,6], [7,8]]
+:m Data.List
+intercalte [1,2,3] [[4,5,6], [7,8]]
+:t intercalate

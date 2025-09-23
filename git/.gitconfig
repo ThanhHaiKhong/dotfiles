@@ -1,0 +1,26 @@
+[user]
+	name = ThanhHaiKhong
+	email = khongthanhhai@gmail.com
+[core]
+	excludesfile = /Users/thanhhaikhong/.gitignore_global
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
+[commit]
+	template = /Users/thanhhaikhong/.stCommitMsg
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+[pull]
+	rebase = true
+[http]
+	version = HTTP/1.1
+[credential]
+	helper = osxkeychain
+[tag]
+	forcesignannotated = false
