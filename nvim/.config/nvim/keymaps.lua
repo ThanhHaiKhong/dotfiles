@@ -20,7 +20,7 @@ keymap("n", "<leader>q", ":q<CR>", opts)
 keymap("n", "<leader>wq", ":wq<CR>", opts)
 keymap("n", "<leader>x", ":x<CR>", opts)
 
--- Better window navigation
+-- Better window navigation (vim-tmux-navigator will override these for tmux integration)
 keymap("n", "<C-h>", "<C-w>h", opts)
 keymap("n", "<C-j>", "<C-w>j", opts)
 keymap("n", "<C-k>", "<C-w>k", opts)
@@ -179,6 +179,13 @@ end, opts)
 keymap("n", "<leader>qs", function() require("persistence").load() end, opts)
 keymap("n", "<leader>ql", function() require("persistence").load({ last = true }) end, opts)
 keymap("n", "<leader>qd", function() require("persistence").stop() end, opts)
+
+-- ============================================================================
+-- ADDITIONAL PLUGIN KEYMAPS
+-- ============================================================================
+
+-- Clear hlslens highlight
+keymap("n", "<leader>l", ":noh<CR>", opts)
 
 -- ============================================================================
 -- MISCELLANEOUS

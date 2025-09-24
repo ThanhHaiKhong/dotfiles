@@ -124,8 +124,17 @@ require("lazy").setup({
           selection_caret = " ➤ ",
           path_display = { "truncate" },
           file_ignore_patterns = { "node_modules", ".git" },
+        },
+        extensions = {
+          fzf = {
+            fuzzy = true,
+            override_generic_sorter = true,
+            override_file_sorter = true,
+            case_mode = "smart_case",
+          }
         }
       })
+      require("telescope").load_extension("fzf")
       require("telescope").load_extension("project")
     end,
   },
@@ -287,6 +296,9 @@ require("lazy").setup({
   -- Multiple cursors
   { "mg979/vim-visual-multi" },
 
+  -- Tmux integration
+  { "christoomey/vim-tmux-navigator" },
+
   -- ============================================================================
   -- TERMINAL & NAVIGATION
   -- ============================================================================
@@ -408,6 +420,113 @@ require("lazy").setup({
     "folke/trouble.nvim",
     config = function()
       require("trouble").setup({})
+    end,
+  },
+
+  -- ============================================================================
+  -- ADDITIONAL PRODUCTIVITY PLUGINS
+  -- ============================================================================
+
+  -- Better quickfix window
+  {
+    "kevinhwang91/nvim-bqf",
+    ft = "qf",
+    config = function()
+      require("bqf").setup({})
+    end,
+  },
+
+  -- Smooth scrolling
+  {
+    "karb94/neoscroll.nvim",
+    config = function()
+      require("neoscroll").setup({
+        mappings = {"<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "<C-e>", "zt", "zz", "zb"},
+        hide_cursor = true,
+        stop_eof = true,
+        respect_scrolloff = false,
+        cursor_scrolls_alone = true,
+      })
+    end,
+  },
+
+  -- Highlight word under cursor
+  {
+    "RRethy/vim-illuminate",
+    config = function()
+      require("illuminate").configure({
+        delay = 200,
+        large_file_cutoff = 2000,
+        large_file_overrides = {
+          providers = { "lsp" },
+        },
+      })
+    end,
+  },
+
+  -- Better incremental search
+  {
+    "kevinhwang91/nvim-hlslens",
+    config = function()
+      require("hlslens").setup({})
+
+      local kopts = {noremap = true, silent = true}
+      vim.api.nvim_set_keymap('n', 'n',
+        [[<Cmd>execute('normal! ' . v:count1 . 'n')<CR><Cmd>lua require('hlslens').start()<CR>]],
+        kopts)
+      vim.api.nvim_set_keymap('n', 'N',
+        [[<Cmd>execute('normal! ' . v:count1 . 'N')<CR><Cmd>lua require('hlslens').start()<CR>]],
+        kopts)
+      vim.api.nvim_set_keymap('n', '*', [[*<Cmd>lua require('hlslens').start()<CR>]], kopts)
+      vim.api.nvim_set_keymap('n', '#', [[#<Cmd>lua require('hlslens').start()<CR>]], kopts)
+    end,
+  },
+
+  -- Rainbow brackets
+  {
+    "luochen1990/rainbow",
+    config = function()
+      vim.g.rainbow_active = 1
+    end,
+  },
+
+  -- ============================================================================
+  -- DEBUGGING (DAP)
+  -- ============================================================================
+
+  -- Debug Adapter Protocol
+  {
+    "mfussenegger/nvim-dap",
+    dependencies = {
+      "rcarriga/nvim-dap-ui",
+      "nvim-neotest/nvim-nio", -- Required for nvim-dap-ui
+      "theHamsta/nvim-dap-virtual-text",
+      "nvim-telescope/telescope-dap.nvim",
+    },
+    config = function()
+      local dap = require("dap")
+      local dapui = require("dapui")
+
+      dapui.setup({})
+      require("nvim-dap-virtual-text").setup({})
+
+      dap.listeners.after.event_initialized["dapui_config"] = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated["dapui_config"] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited["dapui_config"] = function()
+        dapui.close()
+      end
+
+      -- Debug keymaps
+      vim.keymap.set("n", "<leader>db", dap.toggle_breakpoint)
+      vim.keymap.set("n", "<leader>dc", dap.continue)
+      vim.keymap.set("n", "<leader>ds", dap.step_over)
+      vim.keymap.set("n", "<leader>di", dap.step_into)
+      vim.keymap.set("n", "<leader>do", dap.step_out)
+      vim.keymap.set("n", "<leader>dr", dap.repl.open)
     end,
   },
 

@@ -38,6 +38,11 @@ opt.cursorcolumn = false
 opt.termguicolors = true
 opt.background = "dark"
 
+-- Tmux integration
+if vim.env.TMUX then
+  vim.cmd('set t_Co=256')
+end
+
 -- Window splitting
 opt.splitbelow = true
 opt.splitright = true
