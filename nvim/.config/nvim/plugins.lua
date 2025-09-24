@@ -131,6 +131,18 @@ require("lazy").setup({
             override_generic_sorter = true,
             override_file_sorter = true,
             case_mode = "smart_case",
+          },
+          project = {
+            base_dirs = {
+              {'~/Projects', max_depth = 2},
+              {'~/Documents', max_depth = 1},
+              {'~/Desktop', max_depth = 1},
+              {'~/', max_depth = 1},
+            },
+            hidden_files = true,
+            theme = "dropdown",
+            order_by = "asc",
+            search_by = "title",
           }
         }
       })
@@ -372,7 +384,7 @@ require("lazy").setup({
       dashboard.section.buttons.val = {
         dashboard.button("f", "  Find file", ":Telescope find_files <CR>"),
         dashboard.button("e", "  New file", ":ene <BAR> startinsert <CR>"),
-        dashboard.button("p", "  Find project", ":Telescope projects <CR>"),
+        dashboard.button("p", "  Find project", ":Telescope project project <CR>"),
         dashboard.button("r", "  Recently used files", ":Telescope oldfiles <CR>"),
         dashboard.button("t", "  Find text", ":Telescope live_grep <CR>"),
         dashboard.button("c", "  Configuration", ":e $MYVIMRC <CR>"),
