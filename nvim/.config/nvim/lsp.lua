@@ -1,5 +1,4 @@
 -- lsp.lua - Enhanced LSP Configuration
-local lspconfig = require("lspconfig")
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 
@@ -32,7 +31,7 @@ end
 -- ============================================================================
 
 -- Lua Language Server
-lspconfig.lua_ls.setup({
+vim.lsp.config('lua_ls', {
   capabilities = capabilities,
   on_attach = on_attach,
   settings = {
@@ -55,7 +54,7 @@ lspconfig.lua_ls.setup({
 })
 
 -- TypeScript/JavaScript
-lspconfig.tsserver.setup({
+vim.lsp.config('ts_ls', {
   capabilities = capabilities,
   on_attach = on_attach,
   filetypes = { "typescript", "typescriptreact", "typescript.tsx", "javascript", "javascriptreact", "javascript.jsx" },
@@ -63,7 +62,7 @@ lspconfig.tsserver.setup({
 })
 
 -- Python
-lspconfig.pyright.setup({
+vim.lsp.config('pyright', {
   capabilities = capabilities,
   on_attach = on_attach,
   settings = {
@@ -78,7 +77,7 @@ lspconfig.pyright.setup({
 })
 
 -- Rust
-lspconfig.rust_analyzer.setup({
+vim.lsp.config('rust_analyzer', {
   capabilities = capabilities,
   on_attach = on_attach,
   settings = {
@@ -91,7 +90,7 @@ lspconfig.rust_analyzer.setup({
 })
 
 -- Go
-lspconfig.gopls.setup({
+vim.lsp.config('gopls', {
   capabilities = capabilities,
   on_attach = on_attach,
   settings = {
@@ -106,22 +105,23 @@ lspconfig.gopls.setup({
 })
 
 -- Java
-lspconfig.jdtls.setup({
+vim.lsp.config('jdtls', {
   capabilities = capabilities,
   on_attach = on_attach,
 })
 
--- Swift: SourceKit-LSP
-lspconfig.sourcekit.setup({
+-- Swift: SourceKit-LSP (not available via Mason, requires manual installation)
+-- Install with: xcode-select --install or brew install swift
+vim.lsp.config('sourcekit_lsp', {
   capabilities = capabilities,
   on_attach = on_attach,
   cmd = { "sourcekit-lsp" },
   filetypes = { "swift", "objective-c", "objective-cpp" },
-  root_dir = lspconfig.util.root_pattern("Package.swift", ".git", "project.pbxproj"),
+  root_dir = vim.fs.root(0, { "Package.swift", ".git", "project.pbxproj" }),
 })
 
 -- C/C++/Objective-C: clangd
-lspconfig.clangd.setup({
+vim.lsp.config('clangd', {
   capabilities = capabilities,
   on_attach = on_attach,
   cmd = {
@@ -134,7 +134,7 @@ lspconfig.clangd.setup({
     "--fallback-style=llvm",
   },
   filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
-  root_dir = lspconfig.util.root_pattern(
+  root_dir = vim.fs.root(0, {
     '.clangd',
     '.clang-tidy',
     '.clang-format',
@@ -142,7 +142,7 @@ lspconfig.clangd.setup({
     'compile_flags.txt',
     'configure.ac',
     '.git'
-  ),
+  }),
   init_options = {
     usePlaceholders = true,
     completeUnimported = true,
@@ -151,7 +151,7 @@ lspconfig.clangd.setup({
 })
 
 -- Dart/Flutter
-lspconfig.dartls.setup({
+vim.lsp.config('dartls', {
   capabilities = capabilities,
   on_attach = on_attach,
   cmd = { "dart", "language-server", "--protocol=lsp" },
@@ -172,19 +172,19 @@ lspconfig.dartls.setup({
 })
 
 -- HTML
-lspconfig.html.setup({
+vim.lsp.config('html', {
   capabilities = capabilities,
   on_attach = on_attach,
 })
 
 -- CSS
-lspconfig.cssls.setup({
+vim.lsp.config('cssls', {
   capabilities = capabilities,
   on_attach = on_attach,
 })
 
 -- JSON
-lspconfig.jsonls.setup({
+vim.lsp.config('jsonls', {
   capabilities = capabilities,
   on_attach = on_attach,
   settings = {
@@ -196,7 +196,7 @@ lspconfig.jsonls.setup({
 })
 
 -- YAML
-lspconfig.yamlls.setup({
+vim.lsp.config('yamlls', {
   capabilities = capabilities,
   on_attach = on_attach,
   settings = {
@@ -249,7 +249,7 @@ require("mason-lspconfig").setup_handlers({
   -- Default handler for installed servers
   function(server_name)
     if server_name ~= "jdtls" then -- jdtls is handled separately
-      lspconfig[server_name].setup({
+      vim.lsp.config[server_name]({
         capabilities = capabilities,
         on_attach = on_attach,
       })
@@ -260,7 +260,7 @@ require("mason-lspconfig").setup_handlers({
   ["lua_ls"] = function()
     -- Already configured above
   end,
-  ["tsserver"] = function()
+  ["ts_ls"] = function()
     -- Already configured above
   end,
   ["pyright"] = function()

@@ -28,6 +28,23 @@ $swift\
 $kotlin\
 $php\
 $ruby\
+$lua\
+$c\
+$cmake\
+$deno\
+$crystal\
+$elixir\
+$elm\
+$erlang\
+$fennel\
+$gleam\
+$haskell\
+$julia\
+$nim\
+$ocaml\
+$perl\
+$scala\
+$zig\
 $docker_context\
 $kubernetes\
 $aws\
@@ -96,7 +113,10 @@ continuation_prompt = '▶▶ '
 [character]
 success_symbol = '[>](bold green)'
 error_symbol = '[>](bold red)'
-vicmd_symbol = '[<](bold yellow)'  # For vi mode
+vicmd_symbol = '[<](bold yellow)'
+vimcmd_replace_one_symbol = '[<](bold purple)'
+vimcmd_replace_symbol = '[<](bold purple)'
+vimcmd_visual_symbol = '[<](bold orange)'
 
 # ============================================================================
 # DIRECTORY DISPLAY
@@ -278,13 +298,135 @@ style = "bold red"
 format = "[$symbol($version )]($style)"
 
 # ============================================================================
-# BUN RUNTIME
+# LUA (Essential for Neovim configuration)
 # ============================================================================
+[lua]
+symbol = " "
+style = "bold blue"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["lua"]
+detect_files = [".lua-version"]
+
+# ============================================================================
+# C/C++ (Essential for LSPs and Neovim plugins)
+# ============================================================================
+[c]
+symbol = " "
+style = "bold blue"
+format = "[$symbol($version(-$name) )]($style)"
+detect_extensions = ["c", "h"]
+commands = [["cc", "--version"], ["gcc", "--version"], ["clang", "--version"]]
+
+[cmake]
+symbol = "△ "
+style = "bold blue"
+format = "[$symbol($version )]($style)"
+detect_files = ["CMakeLists.txt", "CMakeCache.txt"]
+
+# ============================================================================
+# MODERN RUNTIMES
+# ============================================================================
+[deno]
+symbol = "🦕 "
+style = "bold green"
+format = "[$symbol($version )]($style)"
+detect_files = ["deno.json", "deno.jsonc", "deno.lock", "mod.ts", "mod.js", "deps.ts", "deps.js"]
+
 [bun]
 symbol = "🥟 "
 style = "bold yellow"
 format = "[$symbol($version )]($style)"
 detect_files = ["bun.lock", "bun.lockb", "bunfig.toml"]
+
+# ============================================================================
+# FUNCTIONAL & SYSTEMS LANGUAGES
+# ============================================================================
+[crystal]
+symbol = "🔮 "
+style = "bold red"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["cr"]
+detect_files = ["shard.yml"]
+
+[elixir]
+symbol = " "
+style = "bold purple"
+format = '[$symbol($version \(OTP $otp_version\) )]($style)'
+detect_extensions = ["ex", "exs"]
+detect_files = ["mix.exs"]
+
+[elm]
+symbol = " "
+style = "bold cyan"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["elm"]
+detect_files = ["elm.json", "elm-package.json", ".elm-version"]
+
+[erlang]
+symbol = " "
+style = "bold red"
+format = "[$symbol($version )]($style)"
+detect_files = ["rebar.config", "erlang.mk"]
+
+[fennel]
+symbol = "🧅 "
+style = "bold green"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["fnl"]
+
+[gleam]
+symbol = "⭐ "
+style = "bold yellow"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["gleam"]
+detect_files = ["gleam.toml"]
+
+[haskell]
+symbol = " "
+style = "bold purple"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["hs", "lhs"]
+detect_files = ["stack.yaml", "cabal.project"]
+
+[julia]
+symbol = " "
+style = "bold purple"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["jl"]
+detect_files = ["Project.toml", "Manifest.toml"]
+
+[nim]
+symbol = "👑 "
+style = "bold yellow"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["nim", "nims", "nimble"]
+
+[ocaml]
+symbol = "🐪 "
+style = "bold orange"
+format = '[$symbol($version )(\($switch_indicator$switch_name\) )]($style)'
+detect_extensions = ["opam", "ml", "mli", "re", "rei"]
+detect_files = ["dune", "dune-project", "jbuild", "jbuild-ignore", ".merlin"]
+
+[perl]
+symbol = "🐪 "
+style = "bold blue"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["pl", "pm", "pod"]
+detect_files = ["Makefile.PL", "Build.PL", "cpanfile", "cpanfile.snapshot"]
+
+[scala]
+symbol = " "
+style = "bold red"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["sbt", "scala"]
+detect_files = [".scalaenv", ".sbtenv", "build.sbt"]
+
+[zig]
+symbol = " "
+style = "bold yellow"
+format = "[$symbol($version )]($style)"
+detect_extensions = ["zig"]
 
 # ============================================================================
 # CLOUD & CONTAINERS
@@ -327,7 +469,26 @@ disabled = false
 symbol = "󰏗 "
 style = "bold magenta"
 format = "[$symbol$version]($style) "
-disabled = true  # Can be noisy
+disabled = false
+
+# Development environment indicators
+[conda]
+symbol = "🅒 "
+style = "bold green"
+format = "[$symbol$environment]($style) "
+ignore_base = true
+
+[meson]
+symbol = "⬢ "
+style = "bold blue"
+format = "[$symbol$project]($style) "
+disabled = false
+
+[spack]
+symbol = "🅢 "
+style = "bold blue"
+format = "[$symbol$environment]($style) "
+disabled = false
 
 # [npm]  # Not a standard Starship module
 # symbol = " "
@@ -461,4 +622,31 @@ command = "git config --get user.name"
 when = "git rev-parse --is-inside-work-tree 2> /dev/null"
 style = "bold blue"
 format = "[($output)]($style) "
+disabled = true
+
+# Neovim configuration detection
+[custom.nvim_config]
+command = "echo ''"
+when = "test -d ~/.config/nvim || test -f ~/.vimrc"
+symbol = " "
+style = "bold green"
+format = "[$symbol]($style)"
+disabled = true
+
+# Show if in a Neovim session (when NVIM environment variable is set)
+[custom.nvim_session]
+command = "echo 'NVIM'"
+when = "test -n \"$NVIM\""
+symbol = " "
+style = "bold magenta"
+format = "[$symbol$output]($style) "
+disabled = false
+
+# LSP servers detection (common ones)
+[custom.lsp_servers]
+command = "ls ~/.local/share/nvim/mason/bin/ 2>/dev/null | wc -l | tr -d ' '"
+when = "test -d ~/.local/share/nvim/mason/bin && test $(ls ~/.local/share/nvim/mason/bin/ 2>/dev/null | wc -l) -gt 0"
+symbol = "󱃖 "
+style = "bold cyan"
+format = "[$symbol$output]($style) "
 disabled = true

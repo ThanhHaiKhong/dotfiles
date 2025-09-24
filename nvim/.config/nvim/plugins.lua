@@ -22,8 +22,6 @@ require("lazy").setup({
     end,
   },
 
-  -- LSP Configuration
-  { "neovim/nvim-lspconfig" },
   { "b0o/schemastore.nvim" }, -- JSON/YAML schemas
 
   -- Mason for LSP/DAP/Linter/Formatter management
@@ -46,8 +44,8 @@ require("lazy").setup({
     config = function()
       require("mason-lspconfig").setup({
         ensure_installed = {
-          "lua_ls", "tsserver", "pyright", "rust_analyzer",
-          "gopls", "jdtls", "clangd", "sourcekit"
+          "lua_ls", "ts_ls", "pyright", "rust_analyzer",
+          "gopls", "jdtls", "clangd"
         }
       })
     end,
@@ -117,6 +115,7 @@ require("lazy").setup({
     dependencies = {
       "nvim-lua/plenary.nvim",
       { "nvim-telescope/telescope-fzf-native.nvim", build = "make" }, -- Better sorting
+      "nvim-telescope/telescope-project.nvim", -- Project management
     },
     config = function()
       require("telescope").setup({
@@ -127,6 +126,7 @@ require("lazy").setup({
           file_ignore_patterns = { "node_modules", ".git" },
         }
       })
+      require("telescope").load_extension("project")
     end,
   },
 
