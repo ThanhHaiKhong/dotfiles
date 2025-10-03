@@ -392,8 +392,11 @@ config.disable_default_key_bindings = false
 config.debug_key_events = false
 config.key_map_preference = "Mapped"
 
--- Leader key configuration
+-- Leader key configuration (using CTRL+a for leader)
 config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1000 }
+
+-- Local leader key table (using COMMA)
+local local_leader = { key = ",", mods = "NONE", timeout_milliseconds = 1000 }
 
 config.keys = {
   -- Font size adjustments
@@ -430,29 +433,23 @@ config.keys = {
     action = wezterm.action.ReloadConfiguration,
   },
 
-  -- Workspace management
+  -- Workspace management (fixed conflicts - changed from CMD|SHIFT)
   {
     key = "n",
-    mods = "CMD|SHIFT",
+    mods = "CMD|ALT|SHIFT",
     action = wezterm.action.SwitchWorkspaceRelative(1),
   },
   {
     key = "p",
-    mods = "CMD|SHIFT",
+    mods = "CMD|ALT|SHIFT",
     action = wezterm.action.SwitchWorkspaceRelative(-1),
   },
-  {
-    key = "0",
-    mods = "CMD|SHIFT",
-    action = wezterm.action.ShowLauncherArgs({
-      flags = "FUZZY|WORKSPACES",
-    }),
-  },
+  -- Removed duplicate workspace launcher (keeping CMD+SHIFT+W version)
 
-  -- Pane splitting with leader key
+  -- Pane splitting with leader key (simplified, no Shift needed)
   {
-    key = "|",
-    mods = "LEADER|SHIFT",
+    key = "\\",
+    mods = "LEADER",
     action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }),
   },
   {
@@ -502,9 +499,14 @@ config.keys = {
     action = wezterm.action.ActivateCopyMode,
   },
 
-  -- Search
+  -- Search (enhanced with navigation)
   {
     key = "f",
+    mods = "CMD",
+    action = wezterm.action.Search({ CaseInSensitiveString = "" }),
+  },
+  {
+    key = "g",
     mods = "CMD",
     action = wezterm.action.Search({ CaseInSensitiveString = "" }),
   },
@@ -520,11 +522,12 @@ config.keys = {
     mods = "CMD",
     action = wezterm.action.ClearScrollback("ScrollbackAndViewport"),
   },
-  {
-    key = "l",
-    mods = "CTRL",
-    action = wezterm.action.ClearScrollback("ScrollbackOnly"),
-  },
+  -- Removed Ctrl+L binding to allow shell's clear command to work
+  -- {
+  --   key = "l",
+  --   mods = "CTRL",
+  --   action = wezterm.action.ClearScrollback("ScrollbackOnly"),
+  -- },
 
   -- Quick select
   {
@@ -533,7 +536,7 @@ config.keys = {
     action = wezterm.action.QuickSelect,
   },
 
-  -- Command palette
+  -- Command palette (now available with original shortcut)
   {
     key = "p",
     mods = "CMD|SHIFT",
@@ -547,15 +550,10 @@ config.keys = {
     action = wezterm.action.ShowDebugOverlay,
   },
 
-  -- Toggle fullscreen
+  -- Toggle fullscreen (removed duplicate CMD|CTRL+F)
   {
     key = "Enter",
     mods = "CMD",
-    action = wezterm.action.ToggleFullScreen,
-  },
-  {
-    key = "f",
-    mods = "CMD|CTRL",
     action = wezterm.action.ToggleFullScreen,
   },
 
@@ -677,7 +675,7 @@ config.keys = {
     action = wezterm.action.AdjustPaneSize({ "Down", 5 }),
   },
 
-  -- Send CTRL-A to terminal when pressing CTRL-A twice
+  -- Send CTRL+a to terminal when pressing leader twice
   {
     key = "a",
     mods = "LEADER|CTRL",
@@ -730,7 +728,17 @@ config.keys = {
     action = wezterm.action.MoveTabRelative(1),
   },
 
-  -- Window management
+  -- Window management (added missing macOS standards)
+  {
+    key = "q",
+    mods = "CMD",
+    action = wezterm.action.QuitApplication,
+  },
+  {
+    key = "m",
+    mods = "CMD",
+    action = wezterm.action.Hide,
+  },
   {
     key = "n",
     mods = "CMD|SHIFT",
@@ -785,15 +793,15 @@ config.keys = {
     action = wezterm.action.RotatePanes("CounterClockwise"),
   },
 
-  -- Tab management improvements
+  -- Tab management improvements (using macOS standard shortcuts)
   {
-    key = "Tab",
-    mods = "CTRL",
+    key = "]",
+    mods = "CMD|SHIFT",
     action = wezterm.action.ActivateTabRelative(1),
   },
   {
-    key = "Tab",
-    mods = "CTRL|SHIFT",
+    key = "[",
+    mods = "CMD|SHIFT",
     action = wezterm.action.ActivateTabRelative(-1),
   },
   {
@@ -816,14 +824,21 @@ config.keys = {
     }),
   },
 
-  -- Split pane with current working directory
+  -- Shift+Enter sends just a newline character (literal line break)
   {
-    key = "\"",
-    mods = "LEADER|SHIFT",
+    key = "Enter",
+    mods = "SHIFT",
+    action = wezterm.action.SendString("\n"),
+  },
+
+  -- Split pane with current working directory (simplified shortcuts)
+  {
+    key = "v",
+    mods = "LEADER",
     action = wezterm.action.SplitVertical({ cwd = "CurrentPaneDomain" }),
   },
   {
-    key = "%",
+    key = "h",
     mods = "LEADER|SHIFT",
     action = wezterm.action.SplitHorizontal({ cwd = "CurrentPaneDomain" }),
   },
@@ -1009,7 +1024,11 @@ config.experimental_pixel_positioning = false
 
 -- Key tables for modal bindings (empty by default)
 config.key_tables = {
-
+  -- Create a mode for multi-line input
+  multiline_mode = {
+    { key = "Enter", mods = "NONE", action = wezterm.action.SendString("\n") },
+    { key = "Escape", mods = "NONE", action = wezterm.action.PopKeyTable },
+  }
 }
 
 -- =======================

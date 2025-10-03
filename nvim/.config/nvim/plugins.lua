@@ -278,6 +278,26 @@ require("lazy").setup({
   -- Git commands
   { "tpope/vim-fugitive" },
 
+  -- Lazygit integration
+  {
+    "kdheepak/lazygit.nvim",
+    lazy = true,
+    cmd = {
+      "LazyGit",
+      "LazyGitConfig",
+      "LazyGitCurrentFile",
+      "LazyGitFilter",
+      "LazyGitFilterCurrentFile",
+    },
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
+    keys = {
+      { "<leader>gg", "<cmd>LazyGit<cr>", desc = "LazyGit" },
+      { "<leader>gf", "<cmd>LazyGitCurrentFile<cr>", desc = "LazyGit Current File" },
+    },
+  },
+
   -- ============================================================================
   -- EDITING ENHANCEMENTS
   -- ============================================================================

@@ -1,0 +1,9 @@
+# Python environment variables
+export PYTHONSTARTUP="$HOME/.pythonrc"
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONUNBUFFERED=1
+export PYTHONIOENCODING=utf-8
+
+# pip configuration
+export PIP_REQUIRE_VIRTUALENV=false
+export PIP_DOWNLOAD_CACHE="$HOME/.cache/pip"

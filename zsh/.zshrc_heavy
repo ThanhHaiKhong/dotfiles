@@ -21,13 +21,16 @@ plugins=(
     macos
     docker
     kubectl
-    z
     colored-man-pages
     command-not-found
     extract
     web-search
     copypath
     copyfile
+    sudo
+    dirhistory
+    jsontools
+    encode64
 )
 
 # Nạp oh-my-zsh.
@@ -118,7 +121,6 @@ done
 setopt extendedglob
 
 # Initialize development tools
-eval "$(pyenv init --path)"
 eval "$(gh copilot alias -- zsh)"
 eval $(thefuck --alias)
 
@@ -129,11 +131,13 @@ eval $(thefuck --alias)
 # Load private environment variables (API keys, etc.)
 [ -f "$HOME/.env" ] && source "$HOME/.env"
 
+# Load Python environment variables
+[ -f "$HOME/.config/python/env" ] && source "$HOME/.config/python/env"
+
 # System locale and language
 export LANG=en_US.UTF-8
 
 # Development tools paths
-export PYENV_ROOT="$HOME/.pyenv"
 export ANDROID_HOME="$HOME/Library/Android/sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 
@@ -147,7 +151,6 @@ export DOOMDIR="$HOME/dotfiles/doom/.doom.d"
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Application paths - organized by category
-export PATH="$PYENV_ROOT/bin:$PATH"                                             # Python version manager
 export PATH="$HOME/.config/emacs/bin:$PATH"                                     # Emacs
 export PATH="$HOME/.local/bin:$PATH"                                            # Local binaries
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"                                  # Ruby
@@ -206,6 +209,8 @@ load-nvmrc
 if command -v fzf >/dev/null 2>&1; then
     source <(fzf --zsh)
 fi
+
+# Zoxide initialization moved to end of file
 
 # ============================================================================
 # USEFUL ALIASES
@@ -270,3 +275,18 @@ alias di='docker images'
 # Quick edit configs
 alias zshconfig='code ~/.zshrc_heavy'
 alias ohmyzsh='code ~/.oh-my-zsh'
+
+# New tool aliases
+alias top='btop'
+alias du='dust'
+alias man='batman'
+
+# Lazy git alias (alternative to lg function in main .zshrc)
+alias lzg='lazygit'
+
+# ============================================================================
+# FINAL INITIALIZATION (must be at the end)
+# ============================================================================
+
+# Initialize zoxide (smarter cd command) - MUST BE LAST
+[ -f "$HOME/.config/zoxide/zoxide.zsh" ] && source "$HOME/.config/zoxide/zoxide.zsh"

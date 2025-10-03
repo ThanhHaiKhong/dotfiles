@@ -1,0 +1,58 @@
+# Python startup file
+# This file is executed when Python starts in interactive mode
+
+# Import commonly used modules
+import os
+import sys
+import json
+import datetime
+from pathlib import Path
+
+# Enhanced history and tab completion
+try:
+    import readline
+    import rlcompleter
+
+    # Enable tab completion
+    readline.parse_and_bind("tab: complete")
+
+    # History file location
+    history_file = os.path.expanduser("~/.python_history")
+
+    # Load history if it exists
+    if os.path.exists(history_file):
+        readline.read_history_file(history_file)
+
+    # Save history on exit
+    import atexit
+    atexit.register(readline.write_history_file, history_file)
+
+    # Set history length
+    readline.set_history_length(1000)
+
+except ImportError:
+    # readline not available
+    pass
+
+# Pretty printing for objects
+try:
+    from pprint import pprint as pp
+except ImportError:
+    pass
+
+# Helper functions
+def clear():
+    """Clear the screen"""
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+def pwd():
+    """Print current working directory"""
+    return os.getcwd()
+
+def ls(path='.'):
+    """List directory contents"""
+    return os.listdir(path)
+
+# Print welcome message
+print("Python enhanced REPL loaded")
+print("Available helpers: pp() for pretty print, clear(), pwd(), ls()")

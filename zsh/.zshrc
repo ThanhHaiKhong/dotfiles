@@ -9,6 +9,7 @@
 # ============================================================================
 # Homebrew
 export PATH="/opt/homebrew/bin:$PATH"
+export HOMEBREW_AUTO_UPDATE_SECS=86400  # Auto-update every 24 hours
 
 # Java
 export JAVA_HOME="/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home"
@@ -31,3 +32,16 @@ fi
 
 # Starship prompt (must be AFTER oh-my-zsh to override its theme)
 eval "$(starship init zsh)"
+
+# ============================================================================
+# Pyenv setup (MUST be last to take precedence over all other Python installs)
+# ============================================================================
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+
+# ============================================================================
+# Final aliases (after all other configurations)
+# ============================================================================
+function lg() { lazygit "$@"; }
