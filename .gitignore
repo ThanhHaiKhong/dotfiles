@@ -35,3 +35,6 @@ glab-cli/
 *.pem
 credentials.json
 config.yml
+
+# Shell history files (may contain sensitive data)
+shell/.zsh_history
