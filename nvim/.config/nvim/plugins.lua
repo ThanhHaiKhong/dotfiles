@@ -200,26 +200,59 @@ require("lazy").setup({
     end,
   },
 
-  -- File explorer
+  -- File explorer (neo-tree)
   {
-    "nvim-tree/nvim-tree.lua",
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "MunifTanjim/nui.nvim",
+    },
     config = function()
-      require("nvim-tree").setup({
-        view = {
+      require("neo-tree").setup({
+        close_if_last_window = false,
+        popup_border_style = "rounded",
+        enable_git_status = true,
+        enable_diagnostics = true,
+        filesystem = {
+          filtered_items = {
+            visible = false,
+            hide_dotfiles = false,
+            hide_gitignored = false,
+          },
+          follow_current_file = {
+            enabled = true,
+          },
+          use_libuv_file_watcher = true,
+        },
+        window = {
+          position = "left",
           width = 30,
         },
-        renderer = {
-          icons = {
-            show = {
-              file = true,
-              folder = true,
-              folder_arrow = true,
-              git = true,
-            },
+        default_component_configs = {
+          indent = {
+            indent_size = 2,
+            padding = 1,
           },
-        },
-        filters = {
-          dotfiles = false,
+          icon = {
+            folder_closed = "",
+            folder_open = "",
+            folder_empty = "",
+          },
+          git_status = {
+            symbols = {
+              added = "✚",
+              modified = "",
+              deleted = "✖",
+              renamed = "",
+              untracked = "",
+              ignored = "",
+              unstaged = "",
+              staged = "",
+              conflict = "",
+            }
+          },
         },
       })
     end,

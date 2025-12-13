@@ -82,13 +82,14 @@ keymap("n", "<leader>ds", ":Telescope lsp_document_symbols<CR>", opts)
 keymap("n", "<leader>ws", ":Telescope lsp_workspace_symbols<CR>", opts)
 
 -- ============================================================================
--- FILE TREE KEYMAPS
+-- FILE TREE KEYMAPS (Neo-tree)
 -- ============================================================================
 
-keymap("n", "<leader>e", ":NvimTreeToggle<CR>", opts)
-keymap("n", "<leader>o", ":NvimTreeFocus<CR>", opts)
-keymap("n", "<leader>nf", ":NvimTreeFindFile<CR>", opts)
-keymap("n", "<leader>nc", ":NvimTreeCollapse<CR>", opts)
+keymap("n", "<leader>e", ":Neotree toggle<CR>", opts)
+keymap("n", "<leader>o", ":Neotree focus<CR>", opts)
+keymap("n", "<leader>nf", ":Neotree reveal<CR>", opts)
+keymap("n", "<leader>ng", ":Neotree git_status<CR>", opts)
+keymap("n", "<leader>nb", ":Neotree buffers<CR>", opts)
 
 -- ============================================================================
 -- GIT KEYMAPS

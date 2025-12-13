@@ -1,4 +1,5 @@
 local wezterm = require("wezterm")
+local mux = wezterm.mux
 local config = wezterm.config_builder()
 
 -- =======================
@@ -1034,6 +1035,29 @@ config.key_tables = {
 -- =======================
 -- EVENT HANDLERS
 -- =======================
+
+-- Configure window to open centered with 5/7 width and 4/5 height
+wezterm.on('gui-startup', function(cmd)
+  local tab, pane, window = mux.spawn_window(cmd or {})
+  local gui_window = window:gui_window()
+
+  -- Get screen dimensions
+  local screen = wezterm.gui.screens().active
+  local screen_width = screen.width
+  local screen_height = screen.height
+
+  -- Calculate window dimensions (5/7 width, 4/5 height)
+  local window_width = math.floor(screen_width * 5 / 7)
+  local window_height = math.floor(screen_height * 4 / 5)
+
+  -- Calculate position to center the window
+  local position_x = math.floor((screen_width - window_width) / 2)
+  local position_y = math.floor((screen_height - window_height) / 2)
+
+  -- Set window size and position
+  gui_window:set_inner_size(window_width, window_height)
+  gui_window:set_position(position_x, position_y)
+end)
 
 -- Event handler for toggling tab bar
 wezterm.on("toggle-tabbar", function(window, pane)

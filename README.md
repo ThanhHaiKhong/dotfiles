@@ -16,7 +16,7 @@ Clone this repository to your home directory and run:
 
 ```bash
 cd ~/dotfiles
-stow bash zsh git vim tmux wezterm claude configstore exercism flutter gh gh-copilot ghc github-copilot glab-cli jgit nvim rclone lldb swift
+stow bash zsh git vim tmux wezterm claude configstore exercism flutter gh gh-copilot ghc github-copilot glab-cli jgit nvim rclone lldb swift bin
 ```
 
 ### Package Structure
@@ -41,6 +41,7 @@ stow bash zsh git vim tmux wezterm claude configstore exercism flutter gh gh-cop
 - **rclone**: Rclone configuration (`.config/rclone/`)
 - **lldb**: LLDB debugger configuration (`.lldbinit`, `.lldbinit-rules_xcodeproj`)
 - **swift**: Swift development configuration (`.swift-version`)
+- **bin**: Development scripts (`.local/bin/`) - TCA generators, Swift build/test/lint tools
 
 ### Managing Changes
 
@@ -57,4 +58,4 @@ stow -D <package-name>
 ### Rollback
 
 In case of issues, you can:
-1. Unstow all packages: `stow -D bash zsh git vim tmux wezterm claude configstore exercism flutter gh gh-copilot ghc github-copilot glab-cli jgit nvim rclone lldb swift`
+1. Unstow all packages: `stow -D bash zsh git vim tmux wezterm claude configstore exercism flutter gh gh-copilot ghc github-copilot glab-cli jgit nvim rclone lldb swift bin`
