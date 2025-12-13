@@ -1,0 +1,17 @@
+#compdef create-tca-project
+
+# Zsh completion for create-tca-project
+# Creates a new TCA project with modular architecture
+
+_create-tca-project() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1:project name:' \
+    '2:directory name:' \
+    '3:base path:_files -/' \
+    '--help[Show help message]' \
+    '-h[Show help message]'
+}
+

@@ -27,6 +27,51 @@ stow bin
 
 This will create symlinks in `~/.local/bin/` pointing to the scripts in this package.
 
+### Shell Completions
+
+The package includes tab completions for both Zsh and Bash.
+
+**Zsh Completions:**
+
+Add to your `.zshrc`:
+```bash
+# Add custom completions to fpath
+fpath=(~/.zsh/completions $fpath)
+autoload -Uz compinit && compinit
+```
+
+Then reload your shell:
+```bash
+source ~/.zshrc
+```
+
+**Bash Completions:**
+
+Add to your `.bashrc`:
+```bash
+# Load custom bash completions
+if [ -d ~/.bash_completion.d ]; then
+  for file in ~/.bash_completion.d/*; do
+    [ -r "$file" ] && source "$file"
+  done
+fi
+```
+
+Then reload your shell:
+```bash
+source ~/.bashrc
+```
+
+**Testing Completions:**
+
+After installation, try:
+```bash
+swift-build --<TAB>              # Shows all options
+swift-deps <TAB>                 # Shows available commands
+swift-lint --reporter <TAB>      # Shows reporter types
+create-tca-project My<TAB>       # Completes project names
+```
+
 ## Features
 
 All scripts include:
@@ -113,12 +158,41 @@ To update scripts:
 
 No need to re-stow - the symlinks will automatically reflect changes.
 
+## Shell Completion Features
+
+Each script includes intelligent tab completions:
+
+| Script | Completion Features |
+|--------|-------------------|
+| `swift-build` | Configuration (Debug/Release), platforms (ios/macos/etc.), paths |
+| `swift-test` | Configuration, platforms, filter patterns, paths |
+| `swift-clean` | Flags (--all, --deep, --dry-run), paths |
+| `swift-deps` | Commands (update/resolve/show/etc.), package names |
+| `swift-lint` | Reporter types, rule names, config files, paths |
+| `create-tca-project` | Project names, directory names, paths |
+| `create-tca-feature` | Feature names, target paths |
+| `create-tca-client` | Client names, target paths |
+
 ## Troubleshooting
 
 ### Scripts not found
 Ensure `~/.local/bin` is in your PATH:
 ```bash
 echo $PATH | grep -q ".local/bin" || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+```
+
+### Completions not working (Zsh)
+Check fpath and reload:
+```bash
+echo $fpath | grep -q ".zsh/completions" || echo 'fpath=(~/.zsh/completions $fpath)' >> ~/.zshrc
+rm -f ~/.zcompdump && exec zsh
+```
+
+### Completions not working (Bash)
+Source completion files:
+```bash
+source ~/.bash_completion.d/swift-build  # Test individual file
+# Or add loader to ~/.bashrc (see installation above)
 ```
 
 ### Permission issues

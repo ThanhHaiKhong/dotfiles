@@ -1,0 +1,42 @@
+#!/bin/bash
+# Bash completion for swift-lint
+# Lints Swift code with SwiftLint
+
+_swift_lint_completion() {
+  local cur prev opts reporters
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+  # Options
+  opts="--fix --strict --only-rule --reporter --config --quiet -q --verbose -v --help -h"
+
+  # Reporter types
+  reporters="xcode json csv checkstyle codeclimate junit html emoji sonarqube markdown github-actions-logging"
+
+  # Reporter values
+  if [[ ${prev} == "--reporter" ]]; then
+    COMPREPLY=( $(compgen -W "${reporters}" -- ${cur}) )
+    return 0
+  fi
+
+  # File completion for --config
+  if [[ ${prev} == "--config" ]]; then
+    COMPREPLY=( $(compgen -f -- ${cur}) )
+    return 0
+  fi
+
+  # Path completion for first argument
+  if [[ ${COMP_CWORD} == 1 && ${cur} != -* ]]; then
+    COMPREPLY=( $(compgen -d -- ${cur}) )
+    return 0
+  fi
+
+  # Option completion
+  if [[ ${cur} == -* ]]; then
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+  fi
+}
+
+complete -F _swift_lint_completion swift-lint

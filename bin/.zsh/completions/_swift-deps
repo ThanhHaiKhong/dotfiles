@@ -1,0 +1,41 @@
+#compdef swift-deps
+
+# Zsh completion for swift-deps
+# Manages Swift Package Manager dependencies
+
+_swift-deps() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1:command:->commands' \
+    '2:package name or path:->args' \
+    '--help[Show help message]' \
+    '-h[Show help message]' \
+    && return 0
+
+  case $state in
+    commands)
+      local commands=(
+        'update:Update all dependencies or specific package'
+        'resolve:Resolve Package.resolved'
+        'show:Show dependency tree'
+        'outdated:Check for outdated dependencies'
+        'clean:Clean dependency cache'
+        'reset:Reset Package.resolved'
+      )
+      _describe -t commands 'swift-deps command' commands
+      ;;
+    args)
+      case ${line[1]} in
+        update)
+          _message 'package name (optional)'
+          ;;
+        *)
+          _files -/
+          ;;
+      esac
+      ;;
+  esac
+}
+

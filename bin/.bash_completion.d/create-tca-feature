@@ -1,0 +1,27 @@
+#!/bin/bash
+# Bash completion for create-tca-feature
+# Creates a TCA feature with Store and View files
+
+_create_tca_feature_completion() {
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+  # Options
+  opts="--help -h"
+
+  # Path completion for second argument (target path)
+  if [[ ${COMP_CWORD} == 2 && ${cur} != -* ]]; then
+    COMPREPLY=( $(compgen -d -- ${cur}) )
+    return 0
+  fi
+
+  # Option completion
+  if [[ ${cur} == -* ]]; then
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+  fi
+}
+
+complete -F _create_tca_feature_completion create-tca-feature

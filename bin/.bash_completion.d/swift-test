@@ -1,0 +1,39 @@
+#!/bin/bash
+# Bash completion for swift-test
+# Automatically detects and runs tests for Swift projects
+
+_swift_test_completion() {
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+  # Options
+  opts="--configuration -c --coverage --filter -f --parallel --verbose -v --scheme -s --platform -p --help -h"
+
+  # Configuration values
+  if [[ ${prev} == "--configuration" || ${prev} == "-c" ]]; then
+    COMPREPLY=( $(compgen -W "Debug Release" -- ${cur}) )
+    return 0
+  fi
+
+  # Platform values
+  if [[ ${prev} == "--platform" || ${prev} == "-p" ]]; then
+    COMPREPLY=( $(compgen -W "ios macos tvos watchos visionos" -- ${cur}) )
+    return 0
+  fi
+
+  # Path completion for first argument
+  if [[ ${COMP_CWORD} == 1 && ${cur} != -* ]]; then
+    COMPREPLY=( $(compgen -d -- ${cur}) )
+    return 0
+  fi
+
+  # Option completion
+  if [[ ${cur} == -* ]]; then
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+  fi
+}
+
+complete -F _swift_test_completion swift-test

@@ -1,0 +1,16 @@
+#compdef create-tca-feature
+
+# Zsh completion for create-tca-feature
+# Creates a TCA feature with Store and View files
+
+_create-tca-feature() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1:feature name:' \
+    '2:target path:_files -/' \
+    '--help[Show help message]' \
+    '-h[Show help message]'
+}
+

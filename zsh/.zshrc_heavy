@@ -55,6 +55,9 @@ setopt autocd
 # Thiết lập màu sắc cho dòng lệnh được in ra
 autoload -U colors && colors
 
+# Add custom completions to fpath
+fpath=(~/.zsh/completions $fpath)
+
 # Tự động hoàn thành lệnh - use -C for faster loading
 autoload -Uz compinit
 if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
@@ -151,8 +154,9 @@ export DOOMDIR="$HOME/dotfiles/doom/.doom.d"
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Application paths - organized by category
-export PATH="$HOME/.config/emacs/bin:$PATH"                                     # Emacs
+export PATH="$HOME/.emacs.d/bin:$PATH"                                          # Doom Emacs
 export PATH="$HOME/.local/bin:$PATH"                                            # Local binaries
+export PATH="$HOME/go/bin:$PATH"                                                # Go binaries
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"                                  # Ruby
 export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"  # Android SDK
 export PATH="$PATH:/Users/thanhhaikhong/Library/Application Support/JetBrains/Toolbox/scripts"  # JetBrains Toolbox

@@ -1,0 +1,27 @@
+#!/bin/bash
+# Bash completion for create-tca-project
+# Creates a new TCA project with modular architecture
+
+_create_tca_project_completion() {
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+  # Options
+  opts="--help -h"
+
+  # Path completion for third argument (base path)
+  if [[ ${COMP_CWORD} == 3 && ${cur} != -* ]]; then
+    COMPREPLY=( $(compgen -d -- ${cur}) )
+    return 0
+  fi
+
+  # Option completion
+  if [[ ${cur} == -* ]]; then
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+  fi
+}
+
+complete -F _create_tca_project_completion create-tca-project

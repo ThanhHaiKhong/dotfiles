@@ -1,0 +1,27 @@
+#compdef swift-test
+
+# Zsh completion for swift-test
+# Automatically detects and runs tests for Swift projects
+
+_swift-test() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1:project path:_files -/' \
+    '--configuration[Build configuration]:configuration:(Debug Release)' \
+    '-c[Build configuration]:configuration:(Debug Release)' \
+    '--coverage[Generate code coverage report]' \
+    '--filter[Filter tests by name]:filter:' \
+    '-f[Filter tests by name]:filter:' \
+    '--parallel[Run tests in parallel]' \
+    '--verbose[Show detailed test output]' \
+    '-v[Show detailed test output]' \
+    '--scheme[Specify scheme]:scheme:' \
+    '-s[Specify scheme]:scheme:' \
+    '--platform[Target platform]:platform:(ios macos tvos watchos visionos)' \
+    '-p[Target platform]:platform:(ios macos tvos watchos visionos)' \
+    '--help[Show help message]' \
+    '-h[Show help message]'
+}
+

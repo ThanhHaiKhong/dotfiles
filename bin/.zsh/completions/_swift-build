@@ -1,0 +1,26 @@
+#compdef swift-build
+
+# Zsh completion for swift-build
+# Auto-detects and builds Swift projects (Xcode or SPM)
+
+_swift-build() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1:project path:_files -/' \
+    '--configuration[Build configuration]:configuration:(Debug Release)' \
+    '-c[Build configuration]:configuration:(Debug Release)' \
+    '--clean[Clean before building]' \
+    '--verbose[Show detailed build output]' \
+    '-v[Show detailed build output]' \
+    '--scheme[Specify scheme]:scheme:' \
+    '-s[Specify scheme]:scheme:' \
+    '--platform[Target platform]:platform:(ios macos tvos watchos visionos)' \
+    '-p[Target platform]:platform:(ios macos tvos watchos visionos)' \
+    '--product[Specify product]:product:' \
+    '--target[Specify target]:target:' \
+    '-t[Specify target]:target:' \
+    '--help[Show help message]' \
+    '-h[Show help message]'
+}

@@ -1,0 +1,20 @@
+#compdef swift-clean
+
+# Zsh completion for swift-clean
+# Cleans Swift project build artifacts and caches
+
+_swift-clean() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1:project path:_files -/' \
+    '--all[Clean all projects recursively]' \
+    '--deep[Deep clean with caches]' \
+    '--dry-run[Show what would be deleted]' \
+    '--derived-data[Clean DerivedData only]' \
+    '--spm-cache[Clean SPM cache only]' \
+    '--help[Show help message]' \
+    '-h[Show help message]'
+}
+
