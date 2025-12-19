@@ -7,6 +7,9 @@
 # ============================================================================
 # Essential PATH setup (for VSCode to find commands immediately)
 # ============================================================================
+# User local binaries (custom scripts and tools)
+export PATH="$HOME/.local/bin:$PATH"
+
 # Homebrew
 export PATH="/opt/homebrew/bin:$PATH"
 export HOMEBREW_AUTO_UPDATE_SECS=86400  # Auto-update every 24 hours
