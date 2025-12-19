@@ -40,6 +40,11 @@ config.integrated_title_button_color = "auto"
 config.native_macos_fullscreen_mode = false
 config.macos_forward_to_ime_modifier_mask = "SHIFT|CTRL"
 
+-- Explicitly configure Option keys for Emacs Meta key support
+-- Left Option = Meta (for Emacs), Right Option = Compose (for special chars)
+config.send_composed_key_when_left_alt_is_pressed = false
+config.send_composed_key_when_right_alt_is_pressed = true
+
 -- Window frame configuration
 config.window_frame = {
   font = wezterm.font({
@@ -346,7 +351,6 @@ config.skip_close_confirmation_for_processes_named = {
 config.enable_kitty_graphics = false
 config.enable_title_reporting = false
 config.alternate_buffer_wheel_scroll_speed = 3
-config.scroll_to_bottom_on_input = true
 config.min_scroll_bar_height = "0.5cell"
 config.mouse_wheel_scrolls_tabs = true
 
@@ -831,7 +835,41 @@ config.keys = {
     mods = "SHIFT",
     action = wezterm.action.SendString("\n"),
   },
+  -- Alternative Shift+Enter binding for compatibility
+  {
+    key = "Enter",
+    mods = "SHIFT|CTRL",
+    action = wezterm.action.SendString("\n"),
+  },
+  {
+    key = "\n",
+    mods = "SHIFT",
+    action = wezterm.action.SendString("\n"),
+  },
+  {
+    key = "\r",
+    mods = "SHIFT",
+    action = wezterm.action.SendString("\n"),
+  },
 
+  -- Activate multiline mode for multi-line input
+  {
+    key = "Return",
+    mods = "CTRL",
+    action = wezterm.action.ActivateKeyTable({
+      name = "multiline_mode",
+      timeout_milliseconds = 1000,
+    }),
+  },
+  -- Alternative for Enter key to enter multiline mode
+  {
+    key = "Enter",
+    mods = "CTRL",
+    action = wezterm.action.ActivateKeyTable({
+      name = "multiline_mode",
+      timeout_milliseconds = 1000,
+    }),
+  },
   -- Split pane with current working directory (simplified shortcuts)
   {
     key = "v",
@@ -925,9 +963,6 @@ config.keys = {
 -- Rendering performance
 config.max_fps = 120
 config.animation_fps = 60
-config.cursor_blink_rate = 800
-config.cursor_blink_ease_in = "Constant"
-config.cursor_blink_ease_out = "Constant"
 
 -- GPU acceleration
 config.front_end = "WebGpu"
@@ -961,12 +996,26 @@ config.quick_select_patterns = {
 config.automatically_reload_config = true
 config.check_for_updates = true
 
+-- Scroll to bottom when typing
+config.scroll_to_bottom_on_input = true
+
+-- Color scheme overrides for better visibility
+config.force_reverse_video_cursor = false
+
+-- Smart tab switching behavior
+config.switch_to_last_active_tab_when_closing_tab = true
+
+-- Inactive pane dimming for better focus
+config.inactive_pane_hsb = {
+  saturation = 0.8,
+  brightness = 0.7,
+}
+
 -- Additional missing configuration options with defaults
 -- ===================================================
 
 -- Input handling options
-config.send_composed_key_when_left_alt_is_pressed = false
-config.send_composed_key_when_right_alt_is_pressed = true
+-- Note: Option key settings are configured in macOS-specific section above
 config.treat_left_ctrlalt_as_altgr = false
 config.use_ime = true
 config.ime_preedit_rendering = "Builtin"
@@ -975,9 +1024,9 @@ config.normalize_output_to_unicode_nfc = false
 
 -- Cursor configuration
 config.cursor_blink_rate = 800
-config.cursor_blink_ease_in = "Linear"
-config.cursor_blink_ease_out = "Linear"
-config.default_cursor_style = "SteadyBlock"
+config.cursor_blink_ease_in = "Constant"
+config.cursor_blink_ease_out = "Constant"
+config.default_cursor_style = "BlinkingBlock"
 config.force_reverse_video_cursor = false
 
 -- Text effects
@@ -1014,9 +1063,7 @@ config.check_for_updates_interval_seconds = 86400
 config.show_update_window = false
 config.log_unknown_escape_sequences = false
 
--- Text rendering effects
-config.underline_thickness = nil
-config.underline_position = nil
+-- Text rendering effects (configured in ADVANCED FEATURES section above)
 config.strikethrough_position = nil
 config.cursor_thickness = nil
 
@@ -1079,6 +1126,54 @@ wezterm.on("toggle-scrollbar", function(window, pane)
     overrides.enable_scroll_bar = nil
   end
   window:set_config_overrides(overrides)
+end)
+
+-- Custom tab title formatter
+wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
+  local title = tab.tab_title
+  -- Fallback to active pane title if tab title not set
+  if not title or #title == 0 then
+    title = tab.active_pane.title
+  end
+
+  -- Get current working directory
+  local cwd = tab.active_pane.current_working_dir
+  if cwd then
+    cwd = cwd.file_path or cwd
+    -- Extract just the directory name
+    local dir = cwd:match("([^/]+)/?$")
+    if dir then
+      title = dir
+    end
+  end
+
+  -- Add process icon based on foreground process
+  local process_name = tab.active_pane.foreground_process_name
+  local process_icon = "  "
+  if process_name then
+    if process_name:find("vim") or process_name:find("nvim") then
+      process_icon = " "
+    elseif process_name:find("node") then
+      process_icon = " "
+    elseif process_name:find("python") then
+      process_icon = " "
+    elseif process_name:find("git") then
+      process_icon = " "
+    elseif process_name:find("docker") then
+      process_icon = " "
+    elseif process_name:find("cargo") or process_name:find("rust") then
+      process_icon = " "
+    end
+  end
+
+  local formatted_title = string.format(" %s%s ", process_icon, title)
+
+  -- Truncate if needed
+  if #formatted_title > max_width then
+    formatted_title = wezterm.truncate_right(formatted_title, max_width)
+  end
+
+  return formatted_title
 end)
 
 return config

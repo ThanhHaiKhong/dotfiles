@@ -7,6 +7,7 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 # Use custom format for better control
+# Advanced format with custom modules and contextual information
 format = """
 $os\
 $username\
@@ -16,6 +17,8 @@ $git_branch\
 $git_status\
 $git_metrics\
 $git_state\
+$custom.nvim_session\
+$custom.tmux\
 $fill\
 $nodejs\
 $bun\
@@ -50,9 +53,10 @@ $kubernetes\
 $aws\
 $gcloud\
 $azure\
+$container\
 $cmd_duration\
 $jobs\
-$battery\
+$status\
 $line_break\
 $character"""
 
@@ -100,7 +104,9 @@ crust = "#11111b"
 # ============================================================================
 # RIGHT PROMPT CONFIGURATION
 # ============================================================================
-right_format = """$time$battery$memory_usage"""
+# Advanced right prompt with contextual information
+# Shows: username (SSH), kubernetes context, time, battery, memory
+right_format = """$username$kubernetes$time$battery$memory_usage"""
 
 # ============================================================================
 # CONTINUATION PROMPT
@@ -111,24 +117,29 @@ continuation_prompt = '▶▶ '
 # PROMPT SYMBOL CONFIGURATION
 # ============================================================================
 [character]
-success_symbol = '[>](bold green)'
-error_symbol = '[>](bold red)'
-vicmd_symbol = '[<](bold yellow)'
-vimcmd_replace_one_symbol = '[<](bold purple)'
-vimcmd_replace_symbol = '[<](bold purple)'
-vimcmd_visual_symbol = '[<](bold orange)'
+# Advanced style strings with multiple formatting options
+success_symbol = '[❯](bold green)'
+error_symbol = '[❯](bold red)'
+vicmd_symbol = '[❮](bold yellow)'
+vimcmd_replace_one_symbol = '[❮](bold purple)'
+vimcmd_replace_symbol = '[❮](bold purple)'
+vimcmd_visual_symbol = '[❮](bold orange)'
 
 # ============================================================================
 # DIRECTORY DISPLAY
 # ============================================================================
 [directory]
+# Advanced styling: bold + color from palette
 style = "bold blue"
 read_only = " 󰌾"
 read_only_style = "bold red"
 truncation_length = 5
 truncate_to_repo = false
 home_symbol = "󰋜 ~"
+# Format with advanced styling features
 format = "[$path]($style)[$read_only]($read_only_style) "
+repo_root_style = "bold blue underline"
+repo_root_format = "[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 
 # [directory.substitutions]
 # "Documents" = "󰈙 "
@@ -591,32 +602,106 @@ style = "bold blue"
 format = "[$symbol$state( \\($name\\))]($style) "
 
 # ============================================================================
+# ADVANCED FEATURES CONFIGURATION
+# ============================================================================
+
+# ──────────────────────────────────────────────────────────────────────────
+# TRANSIENT PROMPT (Clean Command History)
+# ──────────────────────────────────────────────────────────────────────────
+# Transient prompt replaces previous prompts with minimal versions
+# Benefits: Cleaner scrollback, reduced visual clutter, faster terminal
+#
+# For Bash (~/.bashrc):
+# PROMPT_COMMAND='PS1="$(starship prompt --status=$? --jobs=${STARSHIP_JOBS_COUNT:-0} --terminal-width=${COLUMNS:-0})"'
+# function blastoff(){
+#     PS1="❯ "
+#     PS2="❯ "
+# }
+# trap blastoff DEBUG
+#
+# For Zsh (~/.zshrc):
+# setopt PROMPT_SUBST
+# PROMPT='$(starship prompt --status=$?)'
+# function zle-line-init() {
+#     PROMPT="❯ "
+# }
+# zle -N zle-line-init
+#
+# For Fish (~/.config/fish/config.fish):
+# function starship_transient_prompt_func
+#   starship module character
+# end
+# enable_transience
+#
+# For PowerShell (add to profile):
+# Invoke-Expression (&starship init powershell)
+# Enable-TransientPrompt
+
+# ──────────────────────────────────────────────────────────────────────────
+# PRE-PROMPT & PRE-EXECUTION COMMANDS
+# ──────────────────────────────────────────────────────────────────────────
+# Run custom functions before rendering prompt or executing commands
+#
+# For Bash (~/.bashrc):
+# starship_precmd_user_func="my_custom_precmd"
+# function my_custom_precmd() {
+#     # Example: Print timestamp before each prompt
+#     # echo "Last command completed at $(date)"
+# }
+#
+# For Fish (~/.config/fish/config.fish):
+# function starship_preprompt_user_func
+#     # Example: Check for system updates
+#     # set -l updates (checkupdates 2>/dev/null | wc -l)
+#     # test $updates -gt 0 && echo "Updates available: $updates"
+# end
+#
+# function starship_preexec_user_func
+#     # Example: Log commands to file
+#     # echo "$(date): $argv" >> ~/.command_history.log
+# end
+
+# ============================================================================
 # WINDOW TITLE CONFIGURATION
 # ============================================================================
-# To enable dynamic window titles, add this to your shell configuration:
+# Dynamic window titles show useful context in your terminal tab/window
 #
 # For Bash/Zsh (~/.bashrc or ~/.zshrc):
 # function set_win_title(){
-#     echo -ne "\033]0; $(basename "$PWD") \007"
+#     echo -ne "\033]0;$(whoami)@$(hostname):$(basename "$PWD")\007"
 # }
 # starship_precmd_user_func="set_win_title"
 #
 # For Fish (~/.config/fish/config.fish):
 # function starship_preprompt_user_func
-#     echo -ne "\033]0; $(basename $PWD) \007"
+#     set -l dir_name (basename $PWD)
+#     set -l git_branch (git branch --show-current 2>/dev/null)
+#     if test -n "$git_branch"
+#         echo -ne "\033]0;$dir_name ($git_branch)\007"
+#     else
+#         echo -ne "\033]0;$dir_name\007"
+#     end
 # end
+#
+# For PowerShell (add to profile):
+# function Invoke-Starship-PreCommand {
+#   $host.ui.RawUI.WindowTitle = "$pwd"
+# }
 
 # ============================================================================
-# CUSTOM COMMANDS (Examples)
+# CUSTOM COMMANDS - Advanced Contextual Information
 # ============================================================================
-# [custom.git_scope]
-# command = "git config --get conventional.scope || echo 'none'"
-# when = "git rev-parse --is-inside-work-tree 2> /dev/null"
-# style = "bold purple"
-# format = "[($output)]($style) "
-# disabled = true
+# These custom commands provide contextual awareness for development workflows
 
-# Show current git user when in a git repo
+# Git conventional commit scope detection
+[custom.git_scope]
+command = "git config --get conventional.scope || echo ''"
+when = "git rev-parse --is-inside-work-tree 2> /dev/null"
+style = "bold purple"
+format = "[scope:($output)]($style) "
+disabled = true
+
+# Show current git user when in a git repo (useful for multi-account setups)
 [custom.git_user]
 command = "git config --get user.name"
 when = "git rev-parse --is-inside-work-tree 2> /dev/null"
@@ -642,7 +727,7 @@ style = "bold magenta"
 format = "[$symbol$output]($style) "
 disabled = false
 
-# LSP servers detection (common ones)
+# LSP servers detection (Mason-installed)
 [custom.lsp_servers]
 command = "ls ~/.local/share/nvim/mason/bin/ 2>/dev/null | wc -l | tr -d ' '"
 when = "test -d ~/.local/share/nvim/mason/bin && test $(ls ~/.local/share/nvim/mason/bin/ 2>/dev/null | wc -l) -gt 0"
@@ -650,3 +735,159 @@ symbol = "󱃖 "
 style = "bold cyan"
 format = "[$symbol$output]($style) "
 disabled = true
+
+# Show if running in tmux session
+[custom.tmux]
+command = "echo 'tmux'"
+when = "test -n \"$TMUX\""
+symbol = " "
+style = "bold green"
+format = "[$symbol]($style) "
+disabled = false
+
+# Show current directory's git commit count (useful for tracking progress)
+[custom.git_commits]
+command = "git rev-list --count HEAD 2>/dev/null || echo '0'"
+when = "git rev-parse --is-inside-work-tree 2> /dev/null"
+symbol = "󰜘 "
+style = "bold yellow"
+format = "[$symbol$output]($style) "
+disabled = true
+
+# Show last command execution time with milliseconds precision
+[custom.last_cmd]
+command = "echo ''"
+when = "false"
+symbol = "󱦟 "
+style = "bold cyan"
+format = "[$symbol$output]($style) "
+disabled = true
+
+# Show active SSH agent status
+[custom.ssh_agent]
+command = "test -n \"$SSH_AUTH_SOCK\" && echo 'active' || echo ''"
+when = "test -n \"$SSH_AUTH_SOCK\""
+symbol = "󰣀 "
+style = "bold green"
+format = "[$symbol]($style) "
+disabled = true
+
+# ============================================================================
+# IMPLEMENTATION GUIDE - Advanced Features
+# ============================================================================
+# This configuration includes several advanced Starship features.
+# To enable them, add the appropriate code to your shell configuration file.
+#
+# CURRENT SHELL DETECTION:
+# Run: echo $SHELL
+#
+# ──────────────────────────────────────────────────────────────────────────
+# QUICK START - Copy relevant section to your shell config
+# ──────────────────────────────────────────────────────────────────────────
+#
+# FOR ZSH (~/.zshrc):
+# ──────────────────────────────────────────────────────────────────────────
+# # Initialize Starship
+# eval "$(starship init zsh)"
+#
+# # Window Title - Shows directory and git branch
+# function set_win_title(){
+#     local dir_name=$(basename "$PWD")
+#     local git_branch=$(git branch --show-current 2>/dev/null)
+#     if [[ -n "$git_branch" ]]; then
+#         echo -ne "\033]0;$dir_name ($git_branch)\007"
+#     else
+#         echo -ne "\033]0;$dir_name\007"
+#     fi
+# }
+# starship_precmd_user_func="set_win_title"
+#
+# # Optional: Custom precmd for notifications or logging
+# function my_precmd() {
+#     # Example: Check for long-running command completion
+#     # if [[ $CMD_DURATION -gt 10000 ]]; then
+#     #     notify-send "Command completed" "Took ${CMD_DURATION}ms"
+#     # fi
+# }
+# # starship_precmd_user_func="my_precmd"
+#
+# ──────────────────────────────────────────────────────────────────────────
+# FOR BASH (~/.bashrc):
+# ──────────────────────────────────────────────────────────────────────────
+# # Initialize Starship
+# eval "$(starship init bash)"
+#
+# # Window Title - Shows directory and git branch
+# function set_win_title(){
+#     local dir_name=$(basename "$PWD")
+#     local git_branch=$(git branch --show-current 2>/dev/null)
+#     if [[ -n "$git_branch" ]]; then
+#         echo -ne "\033]0;$dir_name ($git_branch)\007"
+#     else
+#         echo -ne "\033]0;$dir_name\007"
+#     fi
+# }
+# starship_precmd_user_func="set_win_title"
+#
+# ──────────────────────────────────────────────────────────────────────────
+# FOR FISH (~/.config/fish/config.fish):
+# ──────────────────────────────────────────────────────────────────────────
+# # Initialize Starship
+# starship init fish | source
+#
+# # Window Title with git branch
+# function starship_preprompt_user_func
+#     set -l dir_name (basename $PWD)
+#     set -l git_branch (git branch --show-current 2>/dev/null)
+#     if test -n "$git_branch"
+#         echo -ne "\033]0;$dir_name ($git_branch)\007"
+#     else
+#         echo -ne "\033]0;$dir_name\007"
+#     end
+# end
+#
+# # Optional: Enable transient prompt for cleaner history
+# # function starship_transient_prompt_func
+# #   starship module character
+# # end
+# # enable_transience
+#
+# ──────────────────────────────────────────────────────────────────────────
+# FEATURE TOGGLES
+# ──────────────────────────────────────────────────────────────────────────
+# Enable/disable features by changing 'disabled = true/false' for:
+# - [custom.tmux]           - Show tmux indicator
+# - [custom.nvim_session]   - Show Neovim session indicator
+# - [custom.git_user]       - Show git username
+# - [custom.lsp_servers]    - Show LSP server count
+# - [custom.ssh_agent]      - Show SSH agent status
+# - [kubernetes]            - Show k8s context (heavy performance cost)
+# - [status]                - Show command exit status
+#
+# ──────────────────────────────────────────────────────────────────────────
+# PERFORMANCE TIPS
+# ──────────────────────────────────────────────────────────────────────────
+# 1. Keep scan_timeout low (currently 50ms)
+# 2. Disable unused language modules
+# 3. Disable kubernetes module if not using k8s
+# 4. Use 'only_with_files = true' for context-based modules
+# 5. Increase command_timeout if in slow environments
+#
+# ──────────────────────────────────────────────────────────────────────────
+# STYLE STRING REFERENCE
+# ──────────────────────────────────────────────────────────────────────────
+# Text styles: bold, italic, underline, dimmed, strikethrough
+# Colors: black, red, green, yellow, blue, purple, cyan, white
+# Bright colors: bright-<color>
+# Hex colors: #RRGGBB (e.g., #89b4fa)
+# ANSI colors: 0-255 (e.g., 208)
+# Palette colors: Use color names from [palettes.catppuccin_mocha]
+#
+# Examples:
+# - "bold red"                 -> Bold red text
+# - "underline blue"           -> Blue underlined text
+# - "bold italic #89b4fa"      -> Bold italic with hex color
+# - "bold lavender"            -> Bold using palette color
+# - "bg:blue fg:white"         -> White text on blue background
+#
+# ============================================================================

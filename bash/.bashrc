@@ -27,3 +27,4 @@ claude-code() {
 # Alias for shorter command
 alias cc="claude-code"
 
+. "$HOME/.cargo/env"

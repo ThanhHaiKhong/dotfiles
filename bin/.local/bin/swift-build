@@ -507,7 +507,11 @@ execute_build() {
     if [[ "$PROJECT_TYPE" == "package" ]]; then
         local cmd=$(construct_swift_build_command)
         if [[ "$VERBOSE" == "true" ]]; then
-            eval "$cmd" || exit_code=$?
+            # Run command and capture exit code
+            set +e
+            eval "$cmd"
+            exit_code=$?
+            set -e
         else
             # Show condensed output for SPM
             # Temporarily disable errexit for grep
@@ -520,9 +524,17 @@ execute_build() {
     else
         local cmd=$(construct_xcodebuild_command)
         if [[ "$VERBOSE" == "true" ]] || [[ "$USE_XCPRETTY" == "false" ]]; then
-            eval "$cmd" || exit_code=$?
+            # Run command and capture exit code
+            set +e
+            eval "$cmd"
+            exit_code=$?
+            set -e
         else
-            eval "$cmd" 2>&1 | xcpretty --color || exit_code=$?
+            # Run command with xcpretty and capture exit code
+            set +e
+            eval "$cmd" 2>&1 | xcpretty --color
+            exit_code=${PIPESTATUS[0]}
+            set -e
         fi
     fi
 

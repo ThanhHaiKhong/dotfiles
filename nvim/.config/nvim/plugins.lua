@@ -134,7 +134,6 @@ require("lazy").setup({
           },
           project = {
             base_dirs = {
-              {'~/Projects', max_depth = 2},
               {'~/Documents', max_depth = 1},
               {'~/Desktop', max_depth = 1},
               {'~/', max_depth = 1},

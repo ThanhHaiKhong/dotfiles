@@ -15,6 +15,9 @@ export HOMEBREW_AUTO_UPDATE_SECS=86400  # Auto-update every 24 hours
 export JAVA_HOME="/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home"
 export PATH="$JAVA_HOME/bin:$PATH"
 
+# Swift
+export PATH="/opt/homebrew/opt/swift/bin:$PATH"
+
 # Essential environment variables
 export CLICOLOR=1
 export LSCOLORS=ExFxBxDxCxegedabagacad
@@ -45,3 +48,6 @@ eval "$(pyenv init -)"
 # Final aliases (after all other configurations)
 # ============================================================================
 function lg() { lazygit "$@"; }
+
+# Added by Antigravity
+export PATH="/Users/thanhhaikhong/.antigravity/antigravity/bin:$PATH"

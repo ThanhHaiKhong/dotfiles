@@ -5,3 +5,6 @@ exit
 echo 'Terminal capability test'
 echo 'Terminal capability test'
 echo 'Terminal capability test'
+echo $-
+ps -o command= -p $$
+zsh -l
