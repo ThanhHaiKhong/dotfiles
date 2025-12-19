@@ -829,26 +829,16 @@ config.keys = {
     }),
   },
 
-  -- Shift+Enter sends just a newline character (literal line break)
+  -- Shift+Enter sends just a newline character (literal line break) - primary binding
   {
     key = "Enter",
     mods = "SHIFT",
     action = wezterm.action.SendString("\n"),
   },
-  -- Alternative Shift+Enter binding for compatibility
+  -- Alternative Ctrl+Shift+Enter binding for compatibility
   {
     key = "Enter",
-    mods = "SHIFT|CTRL",
-    action = wezterm.action.SendString("\n"),
-  },
-  {
-    key = "\n",
-    mods = "SHIFT",
-    action = wezterm.action.SendString("\n"),
-  },
-  {
-    key = "\r",
-    mods = "SHIFT",
+    mods = "CTRL|SHIFT",
     action = wezterm.action.SendString("\n"),
   },
 
@@ -953,6 +943,49 @@ config.keys = {
     key = "s",
     mods = "LEADER",
     action = wezterm.action.EmitEvent("toggle-scrollbar"),
+  },
+
+  -- Enhanced productivity bindings
+  -- Quick access to command palette with a more accessible key
+  {
+    key = "x",
+    mods = "CMD|SHIFT",
+    action = wezterm.action.ActivateCommandPalette,
+  },
+  -- Easy access to copy mode
+  {
+    key = "/",
+    mods = "CMD|SHIFT",
+    action = wezterm.action.ActivateCopyMode,
+  },
+  -- Keep existing search functionality; remove potentially conflicting duplicate
+  -- Better pane switching with alternative shortcuts to avoid conflicts
+  {
+    key = "UpArrow",
+    mods = "CMD|SHIFT",
+    action = wezterm.action.ActivatePaneDirection("Up"),
+  },
+  {
+    key = "DownArrow",
+    mods = "CMD|SHIFT",
+    action = wezterm.action.ActivatePaneDirection("Down"),
+  },
+  {
+    key = "LeftArrow",
+    mods = "CMD|SHIFT",
+    action = wezterm.action.ActivatePaneDirection("Left"),
+  },
+  {
+    key = "RightArrow",
+    mods = "CMD|SHIFT",
+    action = wezterm.action.ActivatePaneDirection("Right"),
+  },
+
+  -- Toggle between last two tabs
+  {
+    key = "Tab",
+    mods = "CMD",
+    action = wezterm.action.ActivateLastTab,
   },
 }
 
@@ -1075,7 +1108,11 @@ config.key_tables = {
   -- Create a mode for multi-line input
   multiline_mode = {
     { key = "Enter", mods = "NONE", action = wezterm.action.SendString("\n") },
+    { key = "Return", mods = "NONE", action = wezterm.action.SendString("\n") },
+    { key = "Enter", mods = "SHIFT", action = wezterm.action.SendString("\n") },
+    { key = "Return", mods = "SHIFT", action = wezterm.action.SendString("\n") },
     { key = "Escape", mods = "NONE", action = wezterm.action.PopKeyTable },
+    { key = "c", mods = "CTRL", action = wezterm.action.PopKeyTable },
   }
 }
 

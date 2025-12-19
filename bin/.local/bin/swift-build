@@ -20,6 +20,7 @@
 #   --scheme, -s         Specify scheme (Xcode projects)
 #   --platform, -p       Target platform (ios|macos|tvos|watchos|visionos)
 #   --product            Specify product (SPM projects)
+#   --derived-data-path  Specify derived data path for build artifacts
 #
 # EXAMPLES:
 #   swift-build
@@ -78,7 +79,12 @@ Options:
     --verbose, -v         Show detailed build output
     --scheme, -s          Specify scheme (Xcode projects)
     --platform, -p        Target platform (ios|macos|tvos|watchos|visionos)
-    --product             Specify product (SPM projects)
+    --product             Specify product to build (SPM projects)
+    --target, -t          Specify target to build (SPM projects)
+    --derived-data-path   Specify derived data path for build artifacts
+    --show-destinations   Show available destinations and exit (Xcode projects)
+    --list-products       List available products and exit (SPM projects)
+    --list-targets        List available targets and exit (SPM projects)
     --help, -h            Show this help
 
 Examples:
@@ -87,12 +93,18 @@ Examples:
     swift-build /path/to/project --configuration Release
     swift-build ~/MyApp --clean --platform ios
     swift-build ../OtherProject --scheme MyScheme
+    swift-build --show-destinations                    # List available build destinations (Xcode)
+    swift-build --list-products                        # List available products (SPM)
+    swift-build --product MyLibrary                    # Build specific product (SPM)
+    swift-build --target MyTarget --configuration Release  # Build specific target (SPM)
+    swift-build --derived-data-path ./DerivedData      # Build with custom derived data path
 
 Notes:
     - Works from any subdirectory within a project
     - Auto-detects .xcworkspace, .xcodeproj, or Package.swift
     - Searches up to 10 directory levels to find project root
     - Supports relative paths (../, ./), absolute paths, and ~ expansion
+    - Defaults to generic iOS Simulator for Xcode projects when no platform specified
 
 EOF
     exit 1
@@ -106,8 +118,12 @@ SCHEME=""
 PLATFORM=""
 PRODUCT=""
 TARGET=""
+DERIVED_DATA_PATH=""
 USE_XCPRETTY=false
 PROJECT_PATH=""
+SHOW_DESTINATIONS=false
+LIST_PRODUCTS=false
+LIST_TARGETS=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -145,6 +161,22 @@ while [[ $# -gt 0 ]]; do
         --target|-t)
             TARGET="$2"
             shift 2
+            ;;
+        --derived-data-path)
+            DERIVED_DATA_PATH="$2"
+            shift 2
+            ;;
+        --show-destinations)
+            SHOW_DESTINATIONS=true
+            shift
+            ;;
+        --list-products)
+            LIST_PRODUCTS=true
+            shift
+            ;;
+        --list-targets)
+            LIST_TARGETS=true
+            shift
             ;;
         --help|-h)
             show_usage
@@ -288,28 +320,176 @@ validate_tools() {
     fi
 
     # Check for xcpretty (optional, for pretty output)
-    if [[ "$VERBOSE" == "false" ]] && [[ "$PROJECT_TYPE" != "package" ]] && command -v xcpretty &> /dev/null; then
-        USE_XCPRETTY=true
-    fi
+    # NOTE: Temporarily disabled due to exit code capture issues with PIPESTATUS
+    # if [[ "$VERBOSE" == "false" ]] && [[ "$PROJECT_TYPE" != "package" ]] && command -v xcpretty &> /dev/null; then
+    #     USE_XCPRETTY=true
+    # fi
 }
 
 # Detect schemes for Xcode projects
 detect_schemes() {
     if [[ "$PROJECT_TYPE" == "workspace" ]]; then
-        xcodebuild -workspace "$PROJECT_FILE" -list 2>/dev/null | \
-            awk '/Schemes:/,/^$/' | tail -n +2 | sed 's/^[[:space:]]*//' | grep -v '^$'
+        # Run xcodebuild and capture both stdout and stderr separately
+        local output
+        output=$(xcodebuild -workspace "$PROJECT_FILE" -list 2>&1)
+        local exit_code=$?
+
+        # Only proceed if xcodebuild succeeded
+        if [[ $exit_code -eq 0 ]]; then
+            echo "$output" | awk '/Schemes:/,/^$/' | tail -n +2 | sed 's/^[[:space:]]*//' | grep -v '^$'
+        fi
     elif [[ "$PROJECT_TYPE" == "project" ]]; then
-        xcodebuild -project "$PROJECT_FILE" -list 2>/dev/null | \
-            awk '/Schemes:/,/^$/' | tail -n +2 | sed 's/^[[:space:]]*//' | grep -v '^$'
+        # Run xcodebuild and capture both stdout and stderr separately
+        local output
+        output=$(xcodebuild -project "$PROJECT_FILE" -list 2>&1)
+        local exit_code=$?
+
+        # Only proceed if xcodebuild succeeded
+        if [[ $exit_code -eq 0 ]]; then
+            echo "$output" | awk '/Schemes:/,/^$/' | tail -n +2 | sed 's/^[[:space:]]*//' | grep -v '^$'
+        fi
     fi
+}
+
+# Show available destinations
+show_destinations() {
+    if [[ "$PROJECT_TYPE" != "workspace" && "$PROJECT_TYPE" != "project" ]]; then
+        print_error "Destinations are only available for Xcode projects"
+        echo ""
+        echo "This is a Swift Package Manager project."
+        echo "SPM builds do not use destination specifications."
+        exit 1
+    fi
+
+    # Detect scheme if not specified
+    if [[ -z "$SCHEME" ]]; then
+        SCHEME=$(select_default_scheme 2>/dev/null)
+        if [[ -z "$SCHEME" ]]; then
+            print_error "No scheme found"
+            echo ""
+            echo "Please specify a scheme with --scheme option"
+            exit 1
+        fi
+    fi
+
+    print_info "═══════════════════════════════════════════════════"
+    print_info "Available destinations for scheme: $SCHEME"
+    print_info "═══════════════════════════════════════════════════"
+    echo ""
+
+    # Run xcodebuild to show destinations
+    if [[ "$PROJECT_TYPE" == "workspace" ]]; then
+        xcodebuild -workspace "$PROJECT_FILE" -scheme "$SCHEME" -showdestinations 2>&1 | \
+            awk '/Available destinations/,/Ineligible destinations/ {if (!/Ineligible destinations/) print}'
+    else
+        xcodebuild -project "$PROJECT_FILE" -scheme "$SCHEME" -showdestinations 2>&1 | \
+            awk '/Available destinations/,/Ineligible destinations/ {if (!/Ineligible destinations/) print}'
+    fi
+
+    echo ""
+    print_info "Use --platform option to select a platform (ios, macos, tvos, watchos, visionos)"
+    exit 0
+}
+
+# List available products for SPM package
+list_products() {
+    if [[ "$PROJECT_TYPE" != "package" ]]; then
+        print_error "Products are only available for Swift Package Manager projects"
+        echo ""
+        echo "This is an Xcode project. Use --show-destinations instead."
+        exit 1
+    fi
+
+    print_info "═══════════════════════════════════════════════════"
+    print_info "Available products in $PROJECT_NAME"
+    print_info "═══════════════════════════════════════════════════"
+    echo ""
+
+    # Check if jq is available for better parsing
+    if command -v jq &> /dev/null; then
+        local products=$(swift package dump-package 2>/dev/null | jq -r '.products[] | "\(.name) (\(.type | keys[0]))"')
+        if [[ -n "$products" ]]; then
+            echo "$products" | while read -r line; do
+                echo "  • $line"
+            done
+        else
+            print_warning "No products found in Package.swift"
+        fi
+    else
+        # Fallback without jq - parse manually
+        local dump_output=$(swift package dump-package 2>/dev/null)
+        local in_products=false
+        local product_name=""
+
+        while IFS= read -r line; do
+            if [[ "$line" =~ \"products\"[[:space:]]*: ]]; then
+                in_products=true
+            elif [[ "$in_products" == "true" && "$line" =~ \"name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\" ]]; then
+                product_name="${BASH_REMATCH[1]}"
+                echo "  • $product_name"
+            fi
+        done <<< "$dump_output"
+    fi
+
+    echo ""
+    print_info "Usage: swift-build --product <ProductName>"
+    echo ""
+    print_info "To build all products, run swift-build without --product option"
+    exit 0
+}
+
+# List available targets for SPM package
+list_targets() {
+    if [[ "$PROJECT_TYPE" != "package" ]]; then
+        print_error "Targets are only available for Swift Package Manager projects"
+        echo ""
+        echo "This is an Xcode project."
+        exit 1
+    fi
+
+    print_info "═══════════════════════════════════════════════════"
+    print_info "Available targets in $PROJECT_NAME"
+    print_info "═══════════════════════════════════════════════════"
+    echo ""
+
+    # Check if jq is available for better parsing
+    if command -v jq &> /dev/null; then
+        local targets=$(swift package dump-package 2>/dev/null | jq -r '.targets[] | "\(.name) (\(.type))"')
+        if [[ -n "$targets" ]]; then
+            echo "$targets" | while read -r line; do
+                echo "  • $line"
+            done
+        else
+            print_warning "No targets found in Package.swift"
+        fi
+    else
+        # Fallback without jq - parse manually
+        local dump_output=$(swift package dump-package 2>/dev/null)
+        local in_targets=false
+        local target_name=""
+
+        while IFS= read -r line; do
+            if [[ "$line" =~ \"targets\"[[:space:]]*: ]]; then
+                in_targets=true
+            elif [[ "$in_targets" == "true" && "$line" =~ \"name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\" ]]; then
+                target_name="${BASH_REMATCH[1]}"
+                echo "  • $target_name"
+            fi
+        done <<< "$dump_output"
+    fi
+
+    echo ""
+    print_info "Usage: swift-build --target <TargetName>"
+    echo ""
+    print_info "To build all targets, run swift-build without --target option"
+    exit 0
 }
 
 # Select default scheme
 select_default_scheme() {
     local schemes=$(detect_schemes)
     if [[ -z "$schemes" ]]; then
-        print_error "No schemes found in project"
-        exit 1
+        return 1
     fi
 
     # Prefer scheme matching project name
@@ -337,7 +517,6 @@ construct_xcodebuild_command() {
     # Add scheme
     if [[ -z "$SCHEME" ]]; then
         SCHEME=$(select_default_scheme)
-        print_info "Auto-selected scheme: $SCHEME"
     fi
     cmd+=("-scheme" "$SCHEME")
 
@@ -345,13 +524,16 @@ construct_xcodebuild_command() {
     cmd+=("-configuration" "$CONFIGURATION")
 
     # Add destination based on platform
-    if [[ -n "$PLATFORM" ]]; then
+    # Default to iOS Simulator for Xcode projects/workspaces when no platform specified
+    if [[ -z "$PLATFORM" && ("$PROJECT_TYPE" == "workspace" || "$PROJECT_TYPE" == "project") ]]; then
+        cmd+=("-destination" "generic/platform=iOS Simulator")
+    elif [[ -n "$PLATFORM" ]]; then
         case "$PLATFORM" in
             ios|iOS)
                 cmd+=("-destination" "generic/platform=iOS Simulator")
                 ;;
             macos|macOS)
-                # No destination needed for macOS
+                cmd+=("-destination" "platform=macOS")
                 ;;
             tvos|tvOS)
                 cmd+=("-destination" "generic/platform=tvOS Simulator")
@@ -373,10 +555,57 @@ construct_xcodebuild_command() {
         cmd+=("clean")
     fi
 
+    # Add derived data path if specified
+    if [[ -n "$DERIVED_DATA_PATH" ]]; then
+        cmd+=("-derivedDataPath" "$DERIVED_DATA_PATH")
+    fi
+
     # Add build action
     cmd+=("build")
 
-    echo "${cmd[@]}"
+    # Properly quote each element for safe evaluation
+    printf '%q ' "${cmd[@]}"
+    printf '\n'
+}
+
+# Validate product exists in package
+validate_product() {
+    local product_name="$1"
+
+    if command -v jq &> /dev/null; then
+        local products=$(swift package dump-package 2>/dev/null | jq -r '.products[].name')
+        if ! echo "$products" | grep -q "^${product_name}$"; then
+            print_error "Product '$product_name' not found in package"
+            echo ""
+            echo "Available products:"
+            echo "$products" | while read -r p; do
+                echo "  • $p"
+            done
+            echo ""
+            echo "Use --list-products to see all available products"
+            exit 1
+        fi
+    fi
+}
+
+# Validate target exists in package
+validate_target() {
+    local target_name="$1"
+
+    if command -v jq &> /dev/null; then
+        local targets=$(swift package dump-package 2>/dev/null | jq -r '.targets[].name')
+        if ! echo "$targets" | grep -q "^${target_name}$"; then
+            print_error "Target '$target_name' not found in package"
+            echo ""
+            echo "Available targets:"
+            echo "$targets" | while read -r t; do
+                echo "  • $t"
+            done
+            echo ""
+            echo "Use --list-targets to see all available targets"
+            exit 1
+        fi
+    fi
 }
 
 # Construct swift build command
@@ -392,12 +621,38 @@ construct_swift_build_command() {
 
     # Add product if specified
     if [[ -n "$PRODUCT" ]]; then
+        validate_product "$PRODUCT"
         cmd+=("--product" "$PRODUCT")
     fi
 
     # Add target if specified
     if [[ -n "$TARGET" ]]; then
+        validate_target "$TARGET"
         cmd+=("--target" "$TARGET")
+    fi
+
+    # Add platform-specific options (only if platform is specified)
+    if [[ -n "$PLATFORM" ]]; then
+        case "$PLATFORM" in
+            ios|iOS)
+                cmd+=("--swift-sdk" "iphonesimulator")
+                ;;
+            macos|macOS)
+                cmd+=("--swift-sdk" "macosx")
+                ;;
+            tvos|tvOS)
+                cmd+=("--swift-sdk" "appletvsimulator")
+                ;;
+            watchos|watchOS)
+                cmd+=("--swift-sdk" "watchsimulator")
+                ;;
+            visionos|visionOS)
+                cmd+=("--swift-sdk" "xrsimulator")
+                ;;
+            *)
+                print_warning "Unknown platform: $PLATFORM, building with default swift-sdk"
+                ;;
+        esac
     fi
 
     # Verbose flag
@@ -443,7 +698,39 @@ show_build_summary() {
     if [[ -n "$SCHEME" ]]; then
         echo "Scheme:        $SCHEME"
     fi
+    if [[ -n "$PRODUCT" ]]; then
+        echo "Product:       $PRODUCT"
+    fi
+    if [[ -n "$TARGET" ]]; then
+        echo "Target:        $TARGET"
+    fi
     echo "Configuration: $CONFIGURATION"
+    if [[ -n "$PLATFORM" ]]; then
+        case "$PLATFORM" in
+            ios|iOS)
+                echo "Destination:   iOS Simulator (generic)"
+                ;;
+            macos|macOS)
+                echo "Destination:   macOS"
+                ;;
+            tvos|tvOS)
+                echo "Destination:   tvOS Simulator (generic)"
+                ;;
+            watchos|watchOS)
+                echo "Destination:   watchOS Simulator (generic)"
+                ;;
+            visionos|visionOS)
+                echo "Destination:   visionOS Simulator (generic)"
+                ;;
+            *)
+                echo "Platform:      $PLATFORM"
+                ;;
+        esac
+    elif [[ "$PROJECT_TYPE" == "package" ]]; then
+        echo "Platform:      (default for SPM)"
+    else
+        echo "Destination:   iOS Simulator (generic - default)"
+    fi
     echo "Time:          ${duration} seconds"
     echo ""
 
@@ -484,14 +771,74 @@ show_build_summary() {
 execute_build() {
     local start_time=$(date +%s)
 
+    # Ensure scheme is selected before showing build info
+    if [[ -z "$SCHEME" && ("$PROJECT_TYPE" == "workspace" || "$PROJECT_TYPE" == "project") ]]; then
+        # Need to capture the exit code without triggering set -e, so use a subshell approach
+        SCHEME=$(select_default_scheme 2>/dev/null) || local scheme_detection_failed=1
+        if [[ -z "${scheme_detection_failed:-}" && -n "$SCHEME" ]]; then
+            if [[ "$VERBOSE" == "false" ]]; then
+                print_info "Auto-selected scheme: $SCHEME"
+            fi
+        else
+            # Scheme detection failed - try to detect schemes again to show error reason
+            local schemes_debug=$(detect_schemes 2>&1)
+            if [[ -z "$schemes_debug" ]]; then
+                print_error "Failed to detect schemes in project"
+                echo ""
+                echo "This is likely due to:"
+                echo "  1. Package dependency resolution issues"
+                echo "  2. Project configuration problems"
+                echo "  3. No shared schemes available"
+                echo ""
+                echo "Solutions:"
+                echo "  1. Open the project in Xcode and resolve any package issues"
+                echo "  2. Specify a scheme manually: swift-build --scheme <SchemeName>"
+                echo "  3. Run 'xcodebuild -list' to see available schemes"
+                echo ""
+                exit 1
+            fi
+            # Keep SCHEME as empty - xcodebuild will have to handle it or fail gracefully
+            SCHEME=""  # explicitly set to empty
+        fi
+    fi
+
     print_info "═══════════════════════════════════════════════════"
     print_info "Project:       $PROJECT_NAME ($PROJECT_TYPE)"
     if [[ -n "$SCHEME" ]]; then
         print_info "Scheme:        $SCHEME"
     fi
+    if [[ -n "$PRODUCT" ]]; then
+        print_info "Product:       $PRODUCT"
+    fi
+    if [[ -n "$TARGET" ]]; then
+        print_info "Target:        $TARGET"
+    fi
     print_info "Configuration: $CONFIGURATION"
     if [[ -n "$PLATFORM" ]]; then
-        print_info "Platform:      $PLATFORM"
+        case "$PLATFORM" in
+            ios|iOS)
+                print_info "Destination:   iOS Simulator (generic)"
+                ;;
+            macos|macOS)
+                print_info "Destination:   macOS"
+                ;;
+            tvos|tvOS)
+                print_info "Destination:   tvOS Simulator (generic)"
+                ;;
+            watchos|watchOS)
+                print_info "Destination:   watchOS Simulator (generic)"
+                ;;
+            visionos|visionOS)
+                print_info "Destination:   visionOS Simulator (generic)"
+                ;;
+            *)
+                print_info "Platform:      $PLATFORM"
+                ;;
+        esac
+    elif [[ "$PROJECT_TYPE" == "package" ]]; then
+        print_info "Platform:      (default for SPM)"
+    else
+        print_info "Destination:   iOS Simulator (generic - default)"
     fi
     print_info "═══════════════════════════════════════════════════"
     echo ""
@@ -522,18 +869,30 @@ execute_build() {
             set -e
         fi
     else
+        # For xcodebuild, convert the command string to an array to avoid eval issues with spaces
         local cmd=$(construct_xcodebuild_command)
+
+        # Print the command in verbose mode
+        if [[ "$VERBOSE" == "true" ]]; then
+            echo "Command line invocation:"
+            # Print command without color codes interfering
+            echo "    $cmd"
+            echo ""
+        fi
+
         if [[ "$VERBOSE" == "true" ]] || [[ "$USE_XCPRETTY" == "false" ]]; then
-            # Run command and capture exit code
+            # Run command and capture exit code - use safer execution method
             set +e
+            # Use eval with proper quoting to handle arguments with spaces
             eval "$cmd"
             exit_code=$?
             set -e
         else
             # Run command with xcpretty and capture exit code
+            # Use subshell to properly capture PIPESTATUS
             set +e
-            eval "$cmd" 2>&1 | xcpretty --color
-            exit_code=${PIPESTATUS[0]}
+            ( eval "$cmd" 2>&1 | xcpretty --color; exit ${PIPESTATUS[0]} )
+            exit_code=$?
             set -e
         fi
     fi
@@ -561,6 +920,21 @@ main() {
 
     # Validate tools
     validate_tools
+
+    # Show destinations if requested
+    if [[ "$SHOW_DESTINATIONS" == "true" ]]; then
+        show_destinations
+    fi
+
+    # List products if requested
+    if [[ "$LIST_PRODUCTS" == "true" ]]; then
+        list_products
+    fi
+
+    # List targets if requested
+    if [[ "$LIST_TARGETS" == "true" ]]; then
+        list_targets
+    fi
 
     # Execute build
     execute_build
