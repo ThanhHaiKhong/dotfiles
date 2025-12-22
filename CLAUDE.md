@@ -4,7 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a dotfiles repository containing development environment configurations and custom tooling. The primary focus for development work is the `bin/.local/bin/` directory, which contains a comprehensive suite of Swift development tools.
+This is a dotfiles repository managed with GNU Stow, containing development environment configurations and custom tooling. The primary focus for development work is the `bin/.local/bin/` directory, which contains a comprehensive suite of Swift development tools.
+
+### Repository Structure
+
+**Stow Package Management:**
+- Each top-level directory is a "stow package" (bash, zsh, git, bin, nvim, etc.)
+- Files are symlinked from `~/dotfiles/<package>/<path>` to `~/<path>`
+- **CRITICAL**: Edit files in `~/dotfiles/`, NOT the symlinked versions in `~/`
+- Install packages: `cd ~/dotfiles && stow <package-name>`
+- Remove packages: `stow -D <package-name>`
+
+**Git Branches:**
+- Current working branch: `master`
+- Main branch for PRs: `clean-start`
+- When creating PRs, target `clean-start` as the base branch
 
 ## Swift Development Tools (`bin/.local/bin/`)
 
@@ -126,8 +140,43 @@ When adding new options to tools, update the corresponding completion files.
 4. **Don't ignore iOS version for TCA** - Detection is critical for correct code generation
 5. **Don't break the search hierarchy** - Maintain workspace > project > package priority
 
-### Related Documentation
+## Shell Configuration Architecture
+
+**Split Configuration Pattern:**
+- `.zshrc` - Essential PATH setup and immediate initialization
+- `.zshrc_heavy` - Oh-My-Zsh plugins and deferred initialization
+- VSCode shell integration requires loading `.zshrc_heavy` immediately
+- Non-VSCode terminals can defer heavy initialization
+
+**Key Environment Variables:**
+- `PATH` includes `~/.local/bin` (custom scripts), Homebrew, Java, Swift
+- Starship prompt initialized AFTER oh-my-zsh to override theme
+- Pyenv setup is LAST to take precedence over system Python
+
+**Shell Completions:**
+- Zsh completions: `~/.zsh/completions/` (added to fpath)
+- Bash completions: `~/.bash_completion.d/` (sourced in .bashrc)
+- All bin scripts have corresponding completion files
+
+## Git Configuration
+
+- Pull strategy: `rebase = true`
+- Diff tool: `delta` with side-by-side view, line numbers, Dracula theme
+- Merge strategy: `diff3` conflict style
+- LFS filter enabled for large files
+
+## Key Packages
+
+- **bin** - Swift/TCA development scripts (main development focus)
+- **zsh/bash** - Shell configurations with heavy/light split
+- **git** - Git config with delta integration
+- **nvim** - Neovim configuration with LSP setup
+- **wezterm** - Terminal emulator config (0.75 opacity, custom key bindings)
+- **tmux** - Terminal multiplexer configuration
+- **vim** - Vim config including `.ideavimrc` for JetBrains IDEs
+
+## Related Documentation
 
 - Main Swift tool documentation: `bin/.local/bin/QWEN.md`
 - Individual script headers contain detailed usage and examples
-- Git status shows current work: `master` branch, main branch is `clean-start`
+- Package-specific: `bin/README.md` for installation and troubleshooting
