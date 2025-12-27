@@ -21,6 +21,8 @@
 #   --verbose, -v        Show detailed test output
 #   --scheme, -s         Specify scheme (Xcode projects)
 #   --platform, -p       Target platform (ios|macos|tvos|watchos|visionos)
+#   --device, -d         Specific device/simulator name
+#   --result-bundle      Save detailed results to xcresult bundle
 #
 # EXAMPLES:
 #   swift-test
@@ -82,6 +84,8 @@ Options:
     --verbose, -v         Show detailed test output
     --scheme, -s          Specify scheme (Xcode projects)
     --platform, -p        Target platform (ios|macos|tvos|watchos|visionos)
+    --device, -d          Specific device/simulator name
+    --result-bundle       Save detailed results to xcresult bundle
     --help, -h            Show this help
 
 Examples:
@@ -90,7 +94,8 @@ Examples:
     swift-test --coverage                             # Run with coverage
     swift-test --filter FeatureTests                  # Run specific tests
     swift-test --parallel --coverage                  # Parallel with coverage
-    swift-test ~/MyApp --scheme MyAppTests --platform ios
+    swift-test --platform ios --device "iPhone 16 Pro" # Specific device
+    swift-test --result-bundle --coverage             # Save detailed results
 
 Notes:
     - Works from any subdirectory within a project
@@ -110,6 +115,9 @@ PARALLEL=false
 VERBOSE=false
 SCHEME=""
 PLATFORM=""
+DEVICE=""
+RESULT_BUNDLE=false
+RESULT_BUNDLE_PATH=""
 USE_XCPRETTY=false
 PROJECT_PATH=""
 
@@ -149,6 +157,14 @@ while [[ $# -gt 0 ]]; do
         --platform|-p)
             PLATFORM="$2"
             shift 2
+            ;;
+        --device|-d)
+            DEVICE="$2"
+            shift 2
+            ;;
+        --result-bundle)
+            RESULT_BUNDLE=true
+            shift
             ;;
         --help|-h)
             show_usage
@@ -255,6 +271,105 @@ find_project_root() {
     exit 1
 }
 
+# Get available simulators for a platform
+get_available_simulators() {
+    local platform=$1
+    xcrun simctl list devices available "$platform" 2>/dev/null | \
+        grep -E "^\s+" | \
+        sed 's/^[[:space:]]*//' | \
+        sed 's/ (.*//' | \
+        grep -v "^--" || echo ""
+}
+
+# Get default simulator for platform
+get_default_simulator() {
+    local platform=$1
+    local simulators=""
+
+    case "$platform" in
+        ios|iOS)
+            # Prefer Pro Max models, then Pro, then regular, then any iPhone
+            simulators=$(get_available_simulators "iOS")
+            echo "$simulators" | grep -i "pro max" | head -n 1 || \
+            echo "$simulators" | grep -i "iphone.*pro" | head -n 1 || \
+            echo "$simulators" | grep -i "iphone 16" | head -n 1 || \
+            echo "$simulators" | grep -i "iphone 15" | head -n 1 || \
+            echo "$simulators" | grep -i "iphone" | head -n 1 || echo ""
+            ;;
+        tvos|tvOS)
+            simulators=$(get_available_simulators "tvOS")
+            echo "$simulators" | grep -i "apple tv" | head -n 1 || echo ""
+            ;;
+        watchos|watchOS)
+            simulators=$(get_available_simulators "watchOS")
+            echo "$simulators" | grep -i "ultra" | head -n 1 || \
+            echo "$simulators" | grep -i "series" | head -n 1 || \
+            echo "$simulators" | grep -i "apple watch" | head -n 1 || echo ""
+            ;;
+        visionos|visionOS)
+            simulators=$(get_available_simulators "visionOS")
+            echo "$simulators" | grep -i "vision pro" | head -n 1 || echo ""
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+# Detect default platform based on project
+detect_default_platform() {
+    # Check if Package.swift exists and contains platform info
+    if [[ -f "$PROJECT_ROOT/Package.swift" ]]; then
+        if grep -q "\.iOS" "$PROJECT_ROOT/Package.swift"; then
+            echo "ios"
+            return
+        fi
+    fi
+
+    # Check if project.yml exists (XcodeGen)
+    if [[ -f "$PROJECT_ROOT/project.yml" ]]; then
+        if grep -q "iOS" "$PROJECT_ROOT/project.yml"; then
+            echo "ios"
+            return
+        fi
+    fi
+
+    # Default to macOS as it doesn't require simulator
+    echo "macos"
+}
+
+# Validate device name exists for platform
+validate_device() {
+    local platform=$1
+    local device=$2
+
+    if [[ -z "$device" ]]; then
+        return 0  # No device specified, use default
+    fi
+
+    local available=$(get_available_simulators "$platform")
+    if echo "$available" | grep -q "^${device}$"; then
+        return 0  # Device found
+    fi
+
+    # Device not found - show available options
+    print_error "Device '$device' not found for platform $platform"
+    echo ""
+    echo "Available simulators:"
+    if [[ -n "$available" ]]; then
+        echo "$available" | sed 's/^/  - /'
+    else
+        echo "  No simulators available for $platform"
+        echo ""
+        echo "Install simulators with:"
+        echo "  xcodebuild -downloadPlatform $platform"
+    fi
+    echo ""
+    echo "Tip: Use --device with exact simulator name from list above"
+    echo "     Or omit --device to use auto-detected default"
+    exit 1
+}
+
 # Validate required tools
 validate_tools() {
     # Check for xcodebuild (if needed)
@@ -336,36 +451,93 @@ construct_xcodebuild_test_command() {
     # Add configuration
     cmd+=("-configuration" "$CONFIGURATION")
 
-    # Add destination based on platform
-    if [[ -n "$PLATFORM" ]]; then
-        case "$PLATFORM" in
-            ios|iOS)
-                cmd+=("-destination" "platform=iOS Simulator,name=iPhone 15")
-                ;;
-            macos|macOS)
-                cmd+=("-destination" "platform=macOS")
-                ;;
-            tvos|tvOS)
-                cmd+=("-destination" "platform=tvOS Simulator,name=Apple TV")
-                ;;
-            watchos|watchOS)
-                cmd+=("-destination" "platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)")
-                ;;
-            visionos|visionOS)
-                cmd+=("-destination" "platform=visionOS Simulator,name=Apple Vision Pro")
-                ;;
-            *)
-                print_warning "Unknown platform: $PLATFORM"
-                ;;
-        esac
-    else
-        # Default destination for macOS
-        cmd+=("-destination" "platform=macOS")
+    # Auto-detect platform if not specified
+    if [[ -z "$PLATFORM" ]]; then
+        PLATFORM=$(detect_default_platform)
+        print_info "Auto-detected platform: $PLATFORM"
     fi
+
+    # Validate device if specified (only for non-macOS platforms)
+    if [[ "$PLATFORM" != "macos" ]] && [[ "$PLATFORM" != "macOS" ]]; then
+        validate_device "$PLATFORM" "$DEVICE"
+    fi
+
+    # Add destination based on platform
+    case "$PLATFORM" in
+        ios|iOS)
+            if [[ -n "$DEVICE" ]]; then
+                cmd+=("-destination" "platform=iOS Simulator,name=$DEVICE")
+            else
+                local default_sim=$(get_default_simulator "ios")
+                if [[ -z "$default_sim" ]]; then
+                    print_error "No iOS simulators available"
+                    echo ""
+                    echo "Install simulators with:"
+                    echo "  xcodebuild -downloadPlatform iOS"
+                    exit 1
+                fi
+                print_info "Using simulator: $default_sim"
+                cmd+=("-destination" "platform=iOS Simulator,name=$default_sim")
+            fi
+            ;;
+        macos|macOS)
+            cmd+=("-destination" "platform=macOS")
+            ;;
+        tvos|tvOS)
+            if [[ -n "$DEVICE" ]]; then
+                cmd+=("-destination" "platform=tvOS Simulator,name=$DEVICE")
+            else
+                local default_sim=$(get_default_simulator "tvos")
+                if [[ -z "$default_sim" ]]; then
+                    print_error "No tvOS simulators available"
+                    exit 1
+                fi
+                print_info "Using simulator: $default_sim"
+                cmd+=("-destination" "platform=tvOS Simulator,name=$default_sim")
+            fi
+            ;;
+        watchos|watchOS)
+            if [[ -n "$DEVICE" ]]; then
+                cmd+=("-destination" "platform=watchOS Simulator,name=$DEVICE")
+            else
+                local default_sim=$(get_default_simulator "watchos")
+                if [[ -z "$default_sim" ]]; then
+                    print_error "No watchOS simulators available"
+                    exit 1
+                fi
+                print_info "Using simulator: $default_sim"
+                cmd+=("-destination" "platform=watchOS Simulator,name=$default_sim")
+            fi
+            ;;
+        visionos|visionOS)
+            if [[ -n "$DEVICE" ]]; then
+                cmd+=("-destination" "platform=visionOS Simulator,name=$DEVICE")
+            else
+                local default_sim=$(get_default_simulator "visionos")
+                if [[ -z "$default_sim" ]]; then
+                    print_error "No visionOS simulators available"
+                    exit 1
+                fi
+                print_info "Using simulator: $default_sim"
+                cmd+=("-destination" "platform=visionOS Simulator,name=$default_sim")
+            fi
+            ;;
+        *)
+            print_warning "Unknown platform: $PLATFORM, defaulting to macOS"
+            cmd+=("-destination" "platform=macOS")
+            ;;
+    esac
 
     # Add coverage if requested
     if [[ "$COVERAGE" == "true" ]]; then
         cmd+=("-enableCodeCoverage" "YES")
+    fi
+
+    # Add result bundle
+    if [[ "$RESULT_BUNDLE" == "true" ]]; then
+        local timestamp=$(date +%Y%m%d_%H%M%S)
+        RESULT_BUNDLE_PATH="$PROJECT_ROOT/TestResults_${timestamp}.xcresult"
+        cmd+=("-resultBundlePath" "$RESULT_BUNDLE_PATH")
     fi
 
     # Add parallel testing
@@ -375,7 +547,14 @@ construct_xcodebuild_test_command() {
 
     # Add test filter
     if [[ -n "$FILTER" ]]; then
-        cmd+=("-only-testing:$FILTER")
+        # Support multiple filter formats
+        if [[ "$FILTER" == *":"* ]]; then
+            # Full format: TargetName/TestClassName/testMethodName
+            cmd+=("-only-testing:$FILTER")
+        else
+            # Simple pattern - try to match test class or method name
+            cmd+=("-only-testing:$FILTER")
+        fi
     fi
 
     echo "${cmd[@]}"
@@ -453,15 +632,38 @@ show_test_summary() {
         if [[ "$COVERAGE" == "true" ]]; then
             echo "Coverage report:"
             if [[ "$PROJECT_TYPE" == "package" ]]; then
-                echo "  Run: swift test --enable-code-coverage && xcrun llvm-cov report"
+                echo "  View report:"
+                echo "    xcrun llvm-cov report .build/debug/${PROJECT_NAME}PackageTests.xctest/Contents/MacOS/${PROJECT_NAME}PackageTests -instr-profile .build/debug/codecov/default.profdata"
+                echo ""
+                echo "  Export to HTML:"
+                echo "    xcrun llvm-cov show .build/debug/${PROJECT_NAME}PackageTests.xctest/Contents/MacOS/${PROJECT_NAME}PackageTests -instr-profile .build/debug/codecov/default.profdata --format=html > coverage.html"
             else
-                echo "  Open Xcode and view coverage in Report Navigator"
+                if [[ -n "$RESULT_BUNDLE_PATH" ]]; then
+                    echo "  View in Xcode:"
+                    echo "    open $RESULT_BUNDLE_PATH"
+                    echo ""
+                    echo "  Or use xcrun xccov:"
+                    echo "    xcrun xccov view --report $RESULT_BUNDLE_PATH"
+                else
+                    echo "  Open Xcode and view coverage in Report Navigator"
+                    echo "  Or use --result-bundle for detailed xcresult analysis"
+                fi
             fi
             echo ""
         fi
+
+        if [[ -n "$RESULT_BUNDLE_PATH" ]]; then
+            echo "Test results bundle:"
+            echo "  Location: $RESULT_BUNDLE_PATH"
+            echo "  View in Xcode: open $RESULT_BUNDLE_PATH"
+            echo "  View test output: xcrun xcresulttool get --path $RESULT_BUNDLE_PATH"
+            echo ""
+        fi
+
         echo "Next steps:"
         echo "  - Run with coverage: swift-test --coverage"
         echo "  - Filter specific tests: swift-test --filter TestName"
+        echo "  - Save detailed results: swift-test --result-bundle"
         if [[ "$PROJECT_TYPE" == "workspace" || "$PROJECT_TYPE" == "project" ]]; then
             echo "  - Open in Xcode: open $PROJECT_FILE"
         fi
@@ -496,6 +698,12 @@ execute_tests() {
         print_info "Scheme:        $SCHEME"
     fi
     print_info "Configuration: $CONFIGURATION"
+    if [[ -n "$PLATFORM" ]]; then
+        print_info "Platform:      $PLATFORM"
+    fi
+    if [[ -n "$DEVICE" ]]; then
+        print_info "Device:        $DEVICE"
+    fi
     if [[ "$COVERAGE" == "true" ]]; then
         print_info "Coverage:      Enabled"
     fi
@@ -505,8 +713,8 @@ execute_tests() {
     if [[ -n "$FILTER" ]]; then
         print_info "Filter:        $FILTER"
     fi
-    if [[ -n "$PLATFORM" ]]; then
-        print_info "Platform:      $PLATFORM"
+    if [[ "$RESULT_BUNDLE" == "true" ]]; then
+        print_info "Result Bundle: Enabled"
     fi
     print_info "═══════════════════════════════════════════════════"
     echo ""

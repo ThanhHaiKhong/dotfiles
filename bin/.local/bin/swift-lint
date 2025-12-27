@@ -79,6 +79,10 @@ Options:
     --config PATH         Custom configuration file path
     --quiet, -q           Only show errors
     --verbose, -v         Show detailed output
+    --git-diff            Lint only files changed in git (uncommitted changes)
+    --staged              Lint only staged files in git
+    --stats               Show statistics after linting
+    --files PATTERN       Lint specific files matching pattern (e.g., "*.swift")
     --help, -h            Show this help
 
 Examples:
@@ -89,6 +93,10 @@ Examples:
     swift-lint --only-rule force_cast        # Check specific rule
     swift-lint --reporter json               # JSON output
     swift-lint ~/MyApp --fix --quiet         # Fix quietly
+    swift-lint --git-diff                    # Lint only uncommitted changes
+    swift-lint --staged                      # Lint only staged files
+    swift-lint --stats                       # Show detailed statistics
+    swift-lint --stats --fix                 # Fix with statistics
 
 Notes:
     - Requires SwiftLint to be installed
@@ -108,6 +116,10 @@ CONFIG=""
 QUIET=false
 VERBOSE=false
 PROJECT_PATH=""
+GIT_DIFF=false
+STAGED_ONLY=false
+SHOW_STATS=false
+FILES_PATTERN=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -139,6 +151,22 @@ while [[ $# -gt 0 ]]; do
         --verbose|-v)
             VERBOSE=true
             shift
+            ;;
+        --git-diff)
+            GIT_DIFF=true
+            shift
+            ;;
+        --staged)
+            STAGED_ONLY=true
+            shift
+            ;;
+        --stats)
+            SHOW_STATS=true
+            shift
+            ;;
+        --files)
+            FILES_PATTERN="$2"
+            shift 2
             ;;
         --help|-h)
             show_usage
@@ -199,6 +227,42 @@ check_swiftlint() {
     fi
 }
 
+# Get list of Swift files changed in git
+get_git_changed_files() {
+    local files=()
+
+    if [[ "$STAGED_ONLY" == "true" ]]; then
+        # Get only staged files
+        files=($(git diff --cached --name-only --diff-filter=ACMR | grep "\.swift$" || true))
+    elif [[ "$GIT_DIFF" == "true" ]]; then
+        # Get all uncommitted changes (staged + unstaged)
+        files=($(git diff HEAD --name-only --diff-filter=ACMR | grep "\.swift$" || true))
+    fi
+
+    echo "${files[@]}"
+}
+
+# Count Swift files in directory
+count_swift_files() {
+    local path="$1"
+    find "$path" -name "*.swift" -type f | wc -l | tr -d ' '
+}
+
+# Parse SwiftLint output for statistics
+parse_lint_output() {
+    local output="$1"
+    local violations=0
+    local warnings=0
+    local errors=0
+
+    # Count violations from xcode reporter format
+    violations=$(echo "$output" | grep -c "warning:" || echo "0")
+    warnings=$violations
+    errors=$(echo "$output" | grep -c "error:" || echo "0")
+
+    echo "$violations $warnings $errors"
+}
+
 # Find .swiftlint.yml configuration
 find_config() {
     local current_dir="$PROJECT_PATH"
@@ -228,33 +292,24 @@ find_config() {
 
 # Construct swiftlint command
 construct_swiftlint_command() {
-    local cmd=("swiftlint")
+    local cmd=("swiftlint" "lint")
+    local git_files=()
 
-    # Add lint or autocorrect
-    if [[ "$FIX" == "true" ]]; then
-        cmd+=("--fix")
-    else
-        cmd+=("lint")
-    fi
-
-    # Add path
-    cmd+=("--path" "$PROJECT_PATH")
-
-    # Add config if specified or found
+    # Add config if specified or found (must come before paths)
     if [[ -n "$CONFIG" ]]; then
         cmd+=("--config" "$CONFIG")
     elif [[ -n "$CONFIG_FILE" ]]; then
         cmd+=("--config" "$CONFIG_FILE")
     fi
 
+    # Add fix mode
+    if [[ "$FIX" == "true" ]]; then
+        cmd+=("--fix")
+    fi
+
     # Add strict mode
     if [[ "$STRICT" == "true" ]]; then
         cmd+=("--strict")
-    fi
-
-    # Add only-rule
-    if [[ -n "$ONLY_RULE" ]]; then
-        cmd+=("--only-rule" "$ONLY_RULE")
     fi
 
     # Add reporter
@@ -263,6 +318,24 @@ construct_swiftlint_command() {
     # Add quiet mode
     if [[ "$QUIET" == "true" ]]; then
         cmd+=("--quiet")
+    fi
+
+    # Handle git-based filtering
+    if [[ "$GIT_DIFF" == "true" ]] || [[ "$STAGED_ONLY" == "true" ]]; then
+        git_files=($(get_git_changed_files))
+
+        if [[ ${#git_files[@]} -eq 0 ]]; then
+            print_warning "No Swift files changed in git"
+            return 1
+        fi
+
+        # Add each file as positional argument
+        for file in "${git_files[@]}"; do
+            cmd+=("$file")
+        done
+    else
+        # Add path as positional argument
+        cmd+=("$PROJECT_PATH")
     fi
 
     echo "${cmd[@]}"
@@ -342,6 +415,13 @@ execute_lint() {
     else
         print_info "Mode:     Lint only"
     fi
+
+    # Show file count if stats enabled
+    if [[ "$SHOW_STATS" == "true" ]]; then
+        local file_count=$(count_swift_files "$PROJECT_PATH")
+        print_info "Files:    $file_count Swift files"
+    fi
+
     print_info "═══════════════════════════════════════════════════"
     echo ""
 
@@ -354,11 +434,45 @@ execute_lint() {
 
     local cmd=$(construct_swiftlint_command)
     local exit_code=0
+    local start_time=$(date +%s)
+    local output=""
 
-    if [[ "$VERBOSE" == "true" ]]; then
-        eval "$cmd" || exit_code=$?
+    # Capture output if we need stats
+    if [[ "$SHOW_STATS" == "true" ]]; then
+        output=$(eval "$cmd" 2>&1) || exit_code=$?
+        echo "$output"
     else
-        eval "$cmd" || exit_code=$?
+        if [[ "$VERBOSE" == "true" ]]; then
+            eval "$cmd" || exit_code=$?
+        else
+            eval "$cmd" || exit_code=$?
+        fi
+    fi
+
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+
+    # Show statistics if enabled
+    if [[ "$SHOW_STATS" == "true" ]]; then
+        echo ""
+        print_info "═══════════════════════════════════════════════════"
+        print_info "STATISTICS"
+        print_info "═══════════════════════════════════════════════════"
+        echo "Duration: ${duration}s"
+
+        if [[ -n "$output" ]]; then
+            local warnings=$(echo "$output" | grep -c "warning:" 2>/dev/null || echo "0")
+            local errors=$(echo "$output" | grep -c "error:" 2>/dev/null || echo "0")
+            # Remove any newlines or extra characters
+            warnings=$(echo "$warnings" | head -1 | tr -d '\n')
+            errors=$(echo "$errors" | head -1 | tr -d '\n')
+            echo "Warnings: $warnings"
+            echo "Errors:   $errors"
+            if [[ "$warnings" =~ ^[0-9]+$ ]] && [[ "$errors" =~ ^[0-9]+$ ]]; then
+                echo "Total:    $((warnings + errors)) violations"
+            fi
+        fi
+        echo ""
     fi
 
     show_summary $exit_code
