@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "turndown": "^7.2.1"
+    "bash-language-server": "^5.6.0",
+    "turndown": "^7.2.1",
+    "yaml-language-server": "^1.19.2"
   }
 }
